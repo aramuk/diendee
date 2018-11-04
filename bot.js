@@ -2,6 +2,7 @@ const Discord = require("discord.js");
 const fs = require('fs');
 var auth = require('./auth.json');
 
+//A mapping of userIDs to characters
 var mapping = require('./mapping.json');
 
 const client = new Discord.Client();
@@ -17,7 +18,7 @@ client.on("message", function(message){
     if (message.content.substring(0, 1) == auth.prefix) {
         const args = message.content.slice(auth.prefix.length).trim().split(/ +/g);
         const cmd = args.shift().toLowerCase();
-        
+
         //Commands to listen for 
         switch(cmd) {
             //$hellothere
@@ -38,7 +39,7 @@ client.on("message", function(message){
                 break;
             //$stats
             case 'stats':
-                stats(message);
+                stats(message, args);
                 break;
             //$bio
             case 'bio':
@@ -149,7 +150,7 @@ function about(message){
     var owner = client.users.get(auth.owner);
     let embed = new Discord.RichEmbed()
         .setThumbnail(client.user.displayAvatarURL)
-        .setTitle("Diendee says: ")
+        .setTitle(`**${client.user.username} says:**`)
         .setDescription(`Greetings adventurer! My name is Diendee and I will aid you 
             on your journey.\n\nType ${auth.prefix}usage to learn how to talk to me!`)
         //Add my signature to the bot.
@@ -162,30 +163,77 @@ function about(message){
 //Print information about using Diendee
 function usage(message){
     let embed = new Discord.RichEmbed()
-        .setTitle("Talking to Diendee:")
+        .setThumbnail(client.user.displayAvatarURL)
+        .setTitle(`**${client.user.username} says:**`)
+        .setDescription("Here are some ways you can talk to me:")
         .setColor('#fcce63')
-        .addField(`${auth.prefix}about`, "Learn about Diendee")
-        .addField(`${auth.prefix}usage`, "Learn how to talk to Diendee")
+        .addField(`${auth.prefix}about`, "Learn about me")
+        .addField(`${auth.prefix}usage`, "Learn how to talk to me")
         .addField(`${auth.prefix}roll [dice1...] --drop`, 
-            "Diendee rolls the specified die.\nDie can be specified as `20`, `d10`, `3d12`, `d6+2`, etc.\nCan roll any number of die.\n`--drop` is optional and causes him to drop the lowest roll.")
-        .addField(`${auth.prefix}stats`, "Ask Diendee for your stats")
-        .addField(`${auth.prefix}bio [name1...]`, "Ask Diendee to look up a bio for you. He will look up yours if you don't specify a character");
+            "I'll roll the specified die.\nDie can be specified as `20`, `d10`, `3d12`, `d6+2`, etc.\nCan roll any number of die.\n`--drop` is optional, but if you add it I will drop the lowest roll.")
+        .addField(`${auth.prefix}stats [name1...]`, "I'll look up some stats for you. I'll look up yours if you don't specify character(s).")
+        .addField(`${auth.prefix}bio [name1...]`, "I'll to look up some bios. I'll look up yours if you don't specify character(s).");
 
     message.channel.send(embed);
 }
 
-//Print the stats of the current user
-function stats(message){
-    var pc = mapping['u' + message.author.id];
-    var data = require('./pcs/'+ pc + '.json');
+//Print the requested stats
+function stats(message, characters){
+    //Print the stats of all the specified characters
+    if(characters.length > 0){
+        for(k = 0; k < characters.length; k++){
+            printStats(characters[k], message);
+        }   
+    }
+    //If no character was specified, print the sender's character's stats
+    else{
+        var pc = mapping['u' + message.author.id];
+        printStats(pc, message);
+    }
+}
 
-    let embed = new Discord.RichEmbed()
-        .setThumbnail('attachment://image.png')
-        .setTitle(`**${data.name}**`)
-        .setColor(data.color)
-        .addField("**Stats**", formatHash(data.stats), true);
+function printStats(character, message){
+    try{
+        var data = require('./pcs/'+ character + '.json');
 
-    message.channel.send({embed, files: [{ attachment: data.icon, name: 'image.png' }]});
+        let embed = new Discord.RichEmbed()
+            .setThumbnail('attachment://image.png')
+            .setTitle(`**${data.name}** - ${data.title} - (Level ${data.level} ${data.class})`)
+            .setColor(data.color)
+
+        var skills = getSkills(data);
+        for(j = 0; j < skills.length; j++){
+            embed.addField(`${skills[j].cat}`, formatHash(skills[j].specs), true);
+        }
+
+        message.channel.send({embed, files: [{ attachment: data.icon, name: 'image.png' }]});
+    }catch(e){
+        message.channel.send(`${character} isn't here.`);
+        // console.log('Error');
+    }
+}
+
+function getSkills(data){
+    var categories = require('./pcs/skills.json');
+
+    var columns = [];
+    for(key in data.stats){
+        var fields = {
+            cat: `**${key}: ${data.stats[key]}**`,
+            specs: {}
+        }
+        for(i = 0; i < categories[key].length; i++){
+            var bonus = `${data.specializations[categories[key][i]]}`;
+            if(bonus != 'undefined'){
+                fields.specs[`${categories[key][i]}`] = `${data.stats[key] - bonus}g+${bonus}y`;
+            }
+            else{
+                fields.specs[`${categories[key][i]}`] = `${data.stats[key]}g`;
+            }
+        }
+        columns.push(fields);
+    }
+    return columns;
 }
 
 //Given a hash, return all key-value pairs in a single string, seperated by newlines
@@ -221,7 +269,7 @@ function printBio(character, message){
         var acct = client.users.get(data.player)
         let embed = new Discord.RichEmbed()
             .setAuthor(acct.username, acct.displayAvatarURL)
-            .setTitle(`**${data.name}**`)
+            .setTitle(`**${data.name}** - ${data.title} - (Level ${data.level} ${data.class})`)
             //Character portrait
             .setThumbnail('attachment://image.png')
             //Print character exp
@@ -232,7 +280,7 @@ function printBio(character, message){
             .addBlankField()
             .setColor(data.color);
 
-        //If the character's bio is too long, truncate it, else add the whole thing.
+        // If the character's bio is too long, truncate it, else add the whole thing.
         if(data.bio.length > 1){
             embed.addField('**Bio Preview**', data.bio[0] + '... {truncated}');
             message.channel.send({embed, files: [{ attachment: data.icon, name: 'image.png' }]});
@@ -240,8 +288,7 @@ function printBio(character, message){
             embed.addField('**Bio**', data.bio[0]);
             message.channel.send({embed, files: [{ attachment: data.icon, name: 'image.png' }]});
         }
-    }
-    catch(e){
+    }catch(e){
         message.channel.send(`${character} isn't here.`);
         // console.log('Error');
     }
