@@ -1,0 +1,13 @@
+{
+    "name": "Diendee",
+    "version": "1.0.0",
+    "description": "Helps you plab DnD",
+    "main": "bot.js",
+    "author": "±Centurion",
+    "dependencies": {
+        "discord.io": "https://github.com/woor/discord.io/tarball/gateway_v6",
+        "discord.js": "^11.4.2",
+        "fs": "0.0.1-security",
+        "winston": "^3.1.0"
+    }
+}
