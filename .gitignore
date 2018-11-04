@@ -1,8 +1,11 @@
-./node_modules
-./package-lock.json
+#Dependencies
+node_modules
+package-lock.json
 
-./auth.json
-./stuff.txt
+#Keys
+auth.json
+stuff.txt
 
-./diendee.png
-./pcs
+#Character Data
+diendee.png
+pcs

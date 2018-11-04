@@ -1,2 +1,2 @@
 # Diendee
-A Discord bot that helps you play DnD!.
+A Discord bot that helps you play DnD!
