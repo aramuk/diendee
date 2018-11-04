@@ -45,6 +45,9 @@ client.on("message", function(message){
             case 'bio':
                 bio(message, args);
                 break;
+            case 'readbio':
+                readbio(message, args);
+                break;
         }
     }
 });
@@ -151,8 +154,7 @@ function about(message){
     let embed = new Discord.RichEmbed()
         .setThumbnail(client.user.displayAvatarURL)
         .setTitle(`**${client.user.username} says:**`)
-        .setDescription(`Greetings adventurer! My name is Diendee and I will aid you 
-            on your journey.\n\nType ${auth.prefix}usage to learn how to talk to me!`)
+        .setDescription(`Greetings adventurer!\nMy name is Diendee and I will aid you on your journey.\n\nType ${auth.prefix}usage to learn how to talk to me!`)
         //Add my signature to the bot.
         .setFooter(`This bot was created by ${owner.username}`, owner.displayAvatarURL)
         .setColor("#fcce63");
@@ -172,7 +174,8 @@ function usage(message){
         .addField(`${auth.prefix}roll [dice1...] --drop`, 
             "I'll roll the specified die.\nDie can be specified as `20`, `d10`, `3d12`, `d6+2`, etc.\nCan roll any number of die.\n`--drop` is optional, but if you add it I will drop the lowest roll.")
         .addField(`${auth.prefix}stats [name1...]`, "I'll look up some stats for you. I'll look up yours if you don't specify character(s).")
-        .addField(`${auth.prefix}bio [name1...]`, "I'll to look up some bios. I'll look up yours if you don't specify character(s).");
+        .addField(`${auth.prefix}bio [name1...]`, "I'll to look up some bios. I'll look up yours if you don't specify character(s).")
+        .addField(`${auth.prefix}readbio [name1...]`, "I'll send you some adventurer(s)'s complete life story. I'll send your own if you don't specify character(s).")
 
     message.channel.send(embed);
 }
@@ -274,25 +277,78 @@ function printBio(character, message){
             .setThumbnail('attachment://image.png')
             //Print character exp
             .setDescription(`**Available XP**: ${data.available_xp} **Total XP**: ${data.xp}`)
-            //Print character statistics
+            //Print characteristics and statistics
             .addField('**Characteristics**', formatHash(data.characteristics), true)
             .addField('**Statistics**', formatHash(data.stats), true)
             .addBlankField()
+            //Print a preview to the bio
+            .addField('**Bio Preview**', data.bio_preview + "\n\nUse the `$readbio` command to continue reading.")
             .setColor(data.color);
 
-        // If the character's bio is too long, truncate it, else add the whole thing.
-        if(data.bio.length > 1){
-            embed.addField('**Bio Preview**', data.bio[0] + '... {truncated}');
-            message.channel.send({embed, files: [{ attachment: data.icon, name: 'image.png' }]});
-        }else {
-            embed.addField('**Bio**', data.bio[0]);
-            message.channel.send({embed, files: [{ attachment: data.icon, name: 'image.png' }]});
-        }
+        message.channel.send({embed, files: [{ attachment: data.icon, name: 'image.png' }]});
     }catch(e){
         message.channel.send(`${character} isn't here.`);
-        // console.log('Error');
+        console.log(e);
     }
 }
+
+function readbio(message, characters){
+    let embed = new Discord.RichEmbed()
+        .setThumbnail(client.user.displayAvatarURL)
+        .setTitle(`**${client.user.username} says:**`)
+        .setDescription(`${genFlavorText()}`)
+        .setColor('#fcce63');
+    message.author.send(embed)//.then(function(){
+        if(characters.length > 0){
+            for(j = 0; j < characters.length; j++){
+                sendFullBio(characters[j], message);
+            }   
+        }
+        //If no character was specified, print the sender's character's bio
+        else{
+            var pc = mapping['u' + message.author.id];
+            sendFullBio(pc, message);
+        }
+    //});
+}
+
+function sendFullBio(character, message){
+    fs.readFile('./pcs/bios/' + character + '.txt', 'utf-8', function(err, data){
+        if(err){
+            console.log("Error", err);
+        }
+        else{
+            paragraphs = data.split("\n\n");
+            output = `**${paragraphs[0]}**\n\n`;
+            for(p = 1; p < paragraphs.length; p++){
+                if(output.length + paragraphs[p].length > 1970){
+                    message.author.send(output);
+                    output = `\n`;
+                }
+                output += `${paragraphs[p]}\n\n`;
+            }
+            message.author.send(`${output}`);
+        }
+    });
+}
+
+function genFlavorText(){
+    var num = Math.floor(Math.random() * 5) + 1;
+
+    switch(num){
+        case 1:
+            return "You'd better get cozy. This is a long one.";
+        case 2:
+            return "A nice, quick read.";
+        case 3:
+            return "This one may take you a while. Good Luck!";
+        case 4:
+            return "Not much to learn here, I'm afraid, but you can take a look.";
+        case 5:
+            return "I hope you find what you are looking for.";
+    }
+}
+
 
 //Bot login
 client.login(auth.token);
