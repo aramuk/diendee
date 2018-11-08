@@ -41,10 +41,15 @@ client.on("message", function(message){
             case 'stats':
                 stats(message, args);
                 break;
+            //$get
+            case 'get':
+                get(message, args);
+                break;
             //$bio
             case 'bio':
                 bio(message, args);
                 break;
+            //$readbio
             case 'readbio':
                 readbio(message, args);
                 break;
@@ -195,6 +200,7 @@ function stats(message, characters){
     }
 }
 
+//Prints the stats of the specified character
 function printStats(character, message){
     try{
         var data = require('./pcs/'+ character + '.json');
@@ -212,24 +218,28 @@ function printStats(character, message){
         message.channel.send({embed, files: [{ attachment: data.icon, name: 'image.png' }]});
     }catch(e){
         message.channel.send(`${character} isn't here.`);
-        // console.log('Error');
     }
 }
 
+//Returns a list of skills values sorted by stat
 function getSkills(data){
     var categories = require('./pcs/skills.json');
 
     var columns = [];
+    //For each stat, create a column with the stat as the title and the skills as the fields
     for(key in data.stats){
         var fields = {
             cat: `**${key}: ${data.stats[key]}**`,
             specs: {}
         }
+        //Loop through all the skills for a category and add their values to the column.
         for(i = 0; i < categories[key].length; i++){
             var bonus = `${data.specializations[categories[key][i]]}`;
+            //Get yellow die if available
             if(bonus != 'undefined'){
                 fields.specs[`${categories[key][i]}`] = `${data.stats[key] - bonus}g+${bonus}y`;
             }
+            //Else print just the green die
             else{
                 fields.specs[`${categories[key][i]}`] = `${data.stats[key]}g`;
             }
@@ -237,6 +247,46 @@ function getSkills(data){
         columns.push(fields);
     }
     return columns;
+}
+
+function get(message, characters){
+    //Print the stats of all the specified characters
+    if(characters.length > 1){
+        var choice = characters.shift().toLowerCase();
+        choice = choice.charAt(0).toUpperCase() + choice.slice(1);
+        getProficiency(choice, characters, message);
+    }
+    else if(characters.length == 1){
+        var pc = mapping['u' + message.author.id];
+        getProficiency(characters[0], [pc], message);
+    }
+    //If no character was specified, print the sender's character's stats
+    else{
+        message.channel.send('You must specify a statistic.');
+    }
+}
+
+function getProficiency(skill, characters, message){
+    console.log(skill, characters);
+    var skills = require('./pcs/skills.json');
+    var data = ''
+    var values = []
+    for(i = 0; i < characters.length; i++){
+        try{
+            data = require('./pcs/' + characters[i] + '.json');
+        }
+        catch(e){
+            message.channel.send(`${characters[i]} isn't here.`);
+        }
+        var dice = data.stats[skill]
+        if(dice != undefined){
+            values.push({ 'name': data.name, 'stat': `${data.stats[skill]}`});
+        }
+        else{
+            console.log('Not a stat');
+        }
+    }
+    console.log('Values:', values);
 }
 
 //Given a hash, return all key-value pairs in a single string, seperated by newlines
@@ -293,23 +343,25 @@ function printBio(character, message){
 }
 
 function readbio(message, characters){
+    //Format and print some flavor text
     let embed = new Discord.RichEmbed()
         .setThumbnail(client.user.displayAvatarURL)
         .setTitle(`**${client.user.username} says:**`)
         .setDescription(`${genFlavorText()}`)
         .setColor('#fcce63');
-    message.author.send(embed)//.then(function(){
-        if(characters.length > 0){
-            for(j = 0; j < characters.length; j++){
-                sendFullBio(characters[j], message);
-            }   
-        }
-        //If no character was specified, print the sender's character's bio
-        else{
-            var pc = mapping['u' + message.author.id];
-            sendFullBio(pc, message);
-        }
-    //});
+    message.author.send(embed)
+    
+    //Print the bio of each of the specified character's
+    if(characters.length > 0){
+        for(j = 0; j < characters.length; j++){
+            sendFullBio(characters[j], message);
+        }   
+    }
+    //If no character was specified, print the sender's character's bio
+    else{
+        var pc = mapping['u' + message.author.id];
+        sendFullBio(pc, message);
+    }
 }
 
 function sendFullBio(character, message){
