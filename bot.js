@@ -251,23 +251,24 @@ function getSkills(data){
 
 function get(message, characters){
     //Print the stats of all the specified characters
-    if(characters.length > 1){
+    if(characters.length >= 1){
         var choice = characters.shift().toLowerCase();
         choice = choice.charAt(0).toUpperCase() + choice.slice(1);
-        getProficiency(choice, characters, message);
+        //If no character was specified, print the sender's character's stats
+        if(characters.length == 0){
+            var pc = mapping['u' + message.author.id];
+            getProficiency(choice, [pc], message);
+        }
+        else{
+            getProficiency(choice, characters, message);
+        }
     }
-    else if(characters.length == 1){
-        var pc = mapping['u' + message.author.id];
-        getProficiency(characters[0], [pc], message);
-    }
-    //If no character was specified, print the sender's character's stats
     else{
         message.channel.send('You must specify a statistic.');
     }
 }
 
 function getProficiency(skill, characters, message){
-    console.log(skill, characters);
     var skills = require('./pcs/skills.json');
     var data = ''
     var values = []
@@ -280,13 +281,47 @@ function getProficiency(skill, characters, message){
         }
         var dice = data.stats[skill]
         if(dice != undefined){
-            values.push({ 'name': data.name, 'stat': `${data.stats[skill]}`});
+            values.push({ 'name': data.name, 'stat': `${dice}`});
         }
         else{
-            console.log('Not a stat');
+            dice = getSkillValue(skill, skills, data);
+            if(dice != undefined){
+                values.push({ 'name': data.name, 'stat': `${dice}`});
+            }
         }
     }
-    console.log('Values:', values);
+
+    let embed = new Discord.RichEmbed()
+        .setThumbnail(client.user.displayAvatarURL)
+        .setTitle(`**${client.user.username} says:**`)
+        .setColor('#fcce63');
+    if(values.length > 0){
+        var output = ''
+        for(k = 0; k < values.length; k++){
+            output += '**' + values[k].name + '**: ' + values[k].stat + '\n';
+        }
+        embed.setDescription(`Here are the values for ${skill}:\n\n${output}`);
+    }
+    else{
+        embed.setDescription(`${skill} is not a valid stat`);
+    }
+    message.channel.send(embed);
+}
+
+function getSkillValue(skill, skills, data){
+    for(key in skills){
+        for(j = 0; j < skills[key].length; j++){
+            if(skills[key][j] == skill){
+                var bonus = data.specializations[skill];
+                if(bonus){
+                    return `${data.stats[key] - bonus}g+${bonus}y`;
+                }
+                else{
+                    return `${data.stats[key]}g`;
+                }
+            }
+        }
+    }
 }
 
 //Given a hash, return all key-value pairs in a single string, seperated by newlines
