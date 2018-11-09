@@ -259,31 +259,39 @@ function get(message, characters){
             var pc = mapping['u' + message.author.id];
             getProficiency(choice, [pc], message);
         }
+        //Othewise prin thte stats of all specified characters
         else{
             getProficiency(choice, characters, message);
         }
     }
+    //If there was no statistic specified
     else{
         message.channel.send('You must specify a statistic.');
     }
 }
 
+//Gets the proficiency values for some characters in a particular skill
 function getProficiency(skill, characters, message){
     var skills = require('./pcs/skills.json');
     var data = ''
     var values = []
+    //Loop through all the characters
     for(i = 0; i < characters.length; i++){
+        //Load the character data
         try{
             data = require('./pcs/' + characters[i] + '.json');
         }
         catch(e){
+            //Print a message if the character could not be found
             message.channel.send(`${characters[i]} isn't here.`);
         }
+        //Get proficiency if it is a stat
         var dice = data.stats[skill]
         if(dice != undefined){
             values.push({ 'name': data.name, 'stat': `${dice}`});
         }
         else{
+            //Get proficiency if it is a skill
             dice = getSkillValue(skill, skills, data);
             if(dice != undefined){
                 values.push({ 'name': data.name, 'stat': `${dice}`});
