@@ -62,6 +62,17 @@ function helloThere(message){
     message.channel.send('General Kenobi!\nYou are a bold one.\nhttps://www.youtube.com/watch?v=frszEJb0aOo');
 }
 
+function genBasicEmbed(text){
+    let embed = new Discord.RichEmbed()
+        .setThumbnail(client.user.displayAvatarURL)
+        .setTitle(`**${client.user.username} says:**`)
+        .setColor('#fcce63');
+    if(text){
+        embed.setDescription(text);
+    }
+    return embed
+}
+
 //Rolls the dice specified, and prints the result.
 function roll(message, args){
     //Exit early if no dice specified.
@@ -156,24 +167,16 @@ function getRoll(cmd, drop){
 //Print information about Diendee
 function about(message){
     var owner = client.users.get(auth.owner);
-    let embed = new Discord.RichEmbed()
-        .setThumbnail(client.user.displayAvatarURL)
-        .setTitle(`**${client.user.username} says:**`)
-        .setDescription(`Greetings adventurer!\nMy name is Diendee and I will aid you on your journey.\n\nType ${auth.prefix}usage to learn how to talk to me!`)
-        //Add my signature to the bot.
-        .setFooter(`This bot was created by ${owner.username}`, owner.displayAvatarURL)
-        .setColor("#fcce63");
+    let embed = genBasicEmbed(`Greetings adventurer!\nMy name is Diendee and I will aid you on your journey.\n\nType ${auth.prefix}usage to learn how to talk to me!`)
+        //Add signature to the bot.
+        .setFooter(`This bot was created by ${owner.username}`, owner.displayAvatarURL);
 
     message.channel.send(embed);
 }
 
 //Print information about using Diendee
 function usage(message){
-    let embed = new Discord.RichEmbed()
-        .setThumbnail(client.user.displayAvatarURL)
-        .setTitle(`**${client.user.username} says:**`)
-        .setDescription("Here are some ways you can talk to me:")
-        .setColor('#fcce63')
+    let embed = genBasicEmbed("Here are some ways you can talk to me:")
         .addField(`${auth.prefix}about`, "Learn about me")
         .addField(`${auth.prefix}usage`, "Learn how to talk to me")
         .addField(`${auth.prefix}roll [dice1...] --drop`, 
@@ -181,6 +184,7 @@ function usage(message){
         .addField(`${auth.prefix}stats [name1...]`, "I'll look up some stats for you. I'll look up yours if you don't specify character(s).")
         .addField(`${auth.prefix}bio [name1...]`, "I'll to look up some bios. I'll look up yours if you don't specify character(s).")
         .addField(`${auth.prefix}readbio [name1...]`, "I'll send you some adventurer(s)'s complete life story. I'll send your own if you don't specify character(s).")
+        .addField(`${auth.prefix}get [stat] [name1...]`, "I'll tell you the proficiencies for a given stat. I'll look up yours if you don't specify character(s).")
 
     message.channel.send(embed);
 }
@@ -299,21 +303,16 @@ function getProficiency(skill, characters, message){
         }
     }
 
-    let embed = new Discord.RichEmbed()
-        .setThumbnail(client.user.displayAvatarURL)
-        .setTitle(`**${client.user.username} says:**`)
-        .setColor('#fcce63');
     if(values.length > 0){
         var output = ''
         for(k = 0; k < values.length; k++){
             output += '**' + values[k].name + '**: ' + values[k].stat + '\n';
         }
-        embed.setDescription(`Here are the values for ${skill}:\n\n${output}`);
+        message.channel.send(genBasicEmbed(`Here are the values for _${skill}_:\n\n${output}`));
     }
     else{
-        embed.setDescription(`${skill} is not a valid stat`);
+        message.channel.send(genBasicEmbed(`_${skill}_ is not a valid stat`));
     }
-    message.channel.send(embed);
 }
 
 function getSkillValue(skill, skills, data){
@@ -385,14 +384,10 @@ function printBio(character, message){
     }
 }
 
+//Dms the bio of the specified characters to the requester
 function readbio(message, characters){
     //Format and print some flavor text
-    let embed = new Discord.RichEmbed()
-        .setThumbnail(client.user.displayAvatarURL)
-        .setTitle(`**${client.user.username} says:**`)
-        .setDescription(`${genFlavorText()}`)
-        .setColor('#fcce63');
-    message.author.send(embed)
+    message.author.send(genBasicEmbed(`${genFlavorText()}`))
     
     //Print the bio of each of the specified character's
     if(characters.length > 0){
@@ -407,29 +402,36 @@ function readbio(message, characters){
     }
 }
 
+//Sends the full bio of a character to the requester
 function sendFullBio(character, message){
+    //Read the full bio from a file
     fs.readFile('./pcs/bios/' + character + '.txt', 'utf-8', function(err, data){
         if(err){
             console.log("Error", err);
         }
         else{
             paragraphs = data.split("\n\n");
+            //Add the title of the character's name
             output = `**${paragraphs[0]}**\n\n`;
+            //Print each paragraph of the character's bio
             for(p = 1; p < paragraphs.length; p++){
+                //Max message length for Discord is 2000, so split a paragraph if necessary
                 if(output.length + paragraphs[p].length > 1970){
                     message.author.send(output);
                     output = `\n`;
                 }
                 output += `${paragraphs[p]}\n\n`;
             }
+            //Send the remaining part of the bio
             message.author.send(`${output}`);
         }
     });
 }
 
+//Generate some flavor text for Diendee to say before sending a bio
 function genFlavorText(){
+    //Get a random num and plug it into a switch
     var num = Math.floor(Math.random() * 5) + 1;
-
     switch(num){
         case 1:
             return "You'd better get cozy. This is a long one.";
@@ -443,7 +445,6 @@ function genFlavorText(){
             return "I hope you find what you are looking for.";
     }
 }
-
 
 //Bot login
 client.login(auth.token);
