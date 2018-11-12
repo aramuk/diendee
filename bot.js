@@ -53,6 +53,9 @@ client.on("message", function(message){
             case 'readbio':
                 readbio(message, args);
                 break;
+            case 'hp':
+                hp(message, args);
+                break;
         }
     }
 });
@@ -231,6 +234,7 @@ function printStats(character, message){
             .setThumbnail('attachment://image.png')
             .setTitle(`**${data.name}** - ${data.title} - (Level ${data.level} ${data.class})`)
             .setColor(data.color)
+            .setDescription(`**HP:** ${data.hp.current}/${data.hp.max}`);
 
         var skills = getSkills(data);
         for(j = 0; j < skills.length; j++){
@@ -271,19 +275,19 @@ function getSkills(data){
     return columns;
 }
 
-function get(message, characters){
+function get(message, params){
     //Print the stats of all the specified characters
-    if(characters.length >= 1){
-        var choice = characters.shift().toLowerCase();
+    if(params.length >= 1){
+        var choice = params.shift().toLowerCase();
         choice = choice.charAt(0).toUpperCase() + choice.slice(1);
         //If no character was specified, print the sender's character's stats
-        if(characters.length == 0){
+        if(params.length == 0){
             var pc = mapping['u' + message.author.id];
             getProficiency(choice, [pc], message);
         }
         //Othewise prin thte stats of all specified characters
         else{
-            getProficiency(choice, characters, message);
+            getProficiency(choice, params, message);
         }
     }
     //If there was no statistic specified
@@ -388,7 +392,7 @@ function printBio(character, message){
             //Character portrait
             .setThumbnail('attachment://image.png')
             //Print character exp
-            .setDescription(`**Available XP**: ${data.available_xp} **Total XP**: ${data.xp}`)
+            .setDescription(`**HP**: ${data.hp.current}/${data.hp.max}\n**Available XP**: ${data.xp.available} **Total XP**: ${data.xp.total}`)
             //Print characteristics and statistics
             .addField('**Characteristics**', formatHash(data.characteristics), true)
             .addField('**Statistics**', formatHash(data.stats), true)
@@ -464,6 +468,10 @@ function genFlavorText(){
         case 5:
             return "I hope you find what you are looking for.";
     }
+}
+
+function hp(message, params){
+    
 }
 
 //Bot login
