@@ -100,7 +100,7 @@ function roll(message, args){
     }
 }
 
-//Returns requested rolls as a list of hash
+//Returns requested rolls as a list of hashes representing fields
 function getRollOutput(cmds){
     //Check to see if we should drop the lowest roll
     var drop = false;
@@ -110,12 +110,18 @@ function getRollOutput(cmds){
     }
     //Get the roll corresponding to each command and add it to a list
     fields = [];
+    //Run through all sets of commands
     for(i = 0; i < cmds.length; i++){
+        //Find the individual sets of rolls in those commands
         dice = cmds[i].split(/\+/g);
         var output = '';
         var sum = 0;
+        //Conduct each roll in the set of rolls
         for(j = 0; j < dice.length; j++){
+            //Get the rolls
             var results = getRoll(dice[j], drop);
+
+            //Sum up the rolls and format the output
             output += `${dice[j]}:`;
             for(k = 0; k < results.length; k++){
                 output += ` ${results[k]} `;
@@ -123,11 +129,13 @@ function getRollOutput(cmds){
             }
             output += '\n'
         }
+        //Add the outcomes of the rolls to the fields to be printed
         fields.push({
             name: `${cmds[i]}:`,
             value: `${output}**Total**: ${sum}`
         });
     }
+    //Return all the fields to be printed
     return fields;
 }
 
@@ -189,8 +197,8 @@ function usage(message){
     let embed = genBasicEmbed("Here are some ways you can talk to me:")
         .addField(`${auth.prefix}about`, "Learn about me")
         .addField(`${auth.prefix}usage`, "Learn how to talk to me")
-        .addField(`${auth.prefix}roll [dice1 ...] --drop`, 
-            "I'll roll the specified die.\nDie can be specified as `20`, `d10`, `3d12`, `d6+2`, etc.\nCan roll any number of die.\n`--drop` is optional, but if you add it I will drop the lowest roll.")
+        .addField(`${auth.prefix}roll [roll1 ...] --drop`, 
+            "I'll roll the specified roll.\nRolls can be specifed as `2d6+d8+2d20+5+5`.\nYou can specify multiple rolls, just seperate them with a space like so: `d20 2d6+5`.\n`--drop` is optional, but if you add it I will drop the lowest roll.")
         .addField(`${auth.prefix}stats [name1 ...]`, "I'll look up some stats for you. I'll look up yours if you don't specify character(s).")
         .addField(`${auth.prefix}bio [name1 ...]`, "I'll to look up some bios. I'll look up yours if you don't specify character(s).")
         .addField(`${auth.prefix}readbio [name1 ...]`, "I'll send you some adventurer(s)'s complete life story. I'll send your own if you don't specify character(s).")
@@ -312,7 +320,7 @@ function getProficiency(skill, characters, message){
             }
         }
     }
-
+    //If some values were found for a specific stat
     if(values.length > 0){
         var output = ''
         for(k = 0; k < values.length; k++){
@@ -320,11 +328,13 @@ function getProficiency(skill, characters, message){
         }
         message.channel.send(genBasicEmbed(`Here are the values for _${skill}_:\n\n${output}`));
     }
+    //Error message if invalid stat
     else{
         message.channel.send(genBasicEmbed(`_${skill}_ is not a valid stat`));
     }
 }
 
+//Gets the value of a skill given the skill, the set of all skills, and user data
 function getSkillValue(skill, skills, data){
     for(key in skills){
         for(j = 0; j < skills[key].length; j++){
