@@ -112,21 +112,31 @@ function getRollOutput(cmds){
     fields = [];
     for(i = 0; i < cmds.length; i++){
         dice = cmds[i].split(/\+/g);
+        var output = '';
+        var sum = 0;
         for(j = 0; j < dice.length; j++){
-            fields.push(getRoll(dice[j], drop));
+            var results = getRoll(dice[j], drop);
+            output += `${dice[j]}:`;
+            for(k = 0; k < results.length; k++){
+                output += ` ${results[k]} `;
+                sum += results[k];
+            }
+            output += '\n'
         }
+        fields.push({
+            name: `${cmds[i]}:`,
+            value: `${output}**Total**: ${sum}`
+        });
     }
     return fields;
 }
 
-//Returns the results of an individual roll as a hash
+//Returns the an array of rolls for a given command
 function getRoll(cmd, drop){
+    //If the command specifies a constant, return it.
     dIndex = cmd.indexOf('d');
     if(dIndex == -1){
-        return {
-            name: `${cmd}: `,
-            value: `${cmd}\nTotal: ${cmd}`
-        }
+        return [parseInt(cmd)];
     }
 
     //Find the type of die to roll
@@ -138,24 +148,20 @@ function getRoll(cmd, drop){
         quantity = parseInt(cmd.substring(0, dIndex));
     }
 
-    //Add all die rolls to a list and find the lowest roll.
+    //Roll the dice and record the results.
     rolls = [];
     for(r = 0; r < quantity; r++){
-        outcome = Math.floor(Math.random() * die) + 1;
-        rolls.push(outcome);
+        rolls.push(Math.floor(Math.random() * die) + 1);
     }
     
+    //Drop the lowest roll if applicable
     if(drop){
         minI = getMinIndex(rolls);
         console.log('Dropping ' + rolls[minI] + ' from ' + cmd);
         rolls.splice(minI, 1);
     }
 
-    //Return command, roll, sum as a hash
-    return {
-        name: `${cmd}: `,
-        value: `${rolls}\n`
-    }
+    return rolls;
 }
 
 function getMinIndex(rolls){
