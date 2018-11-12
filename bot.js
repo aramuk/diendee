@@ -111,7 +111,10 @@ function getRollOutput(cmds){
     //Get the roll corresponding to each command and add it to a list
     fields = [];
     for(i = 0; i < cmds.length; i++){
-        fields.push(getRoll(cmds[i], drop));
+        dice = cmds[i].split(/\+/g);
+        for(j = 0; j < dice.length; j++){
+            fields.push(getRoll(dice[j], drop));
+        }
     }
     return fields;
 }
@@ -119,6 +122,13 @@ function getRollOutput(cmds){
 //Returns the results of an individual roll as a hash
 function getRoll(cmd, drop){
     dIndex = cmd.indexOf('d');
+    if(dIndex == -1){
+        return {
+            name: `${cmd}: `,
+            value: `${cmd}\nTotal: ${cmd}`
+        }
+    }
+
     plusIndex = cmd.indexOf('+');
 
     //Find the number of die to roll
@@ -138,7 +148,7 @@ function getRoll(cmd, drop){
 
     //Add all die rolls to a list and find the lowest roll.
     rolls = [];
-    for(j = 0; j < quantity; j++){
+    for(r = 0; r < quantity; r++){
         outcome = Math.floor(Math.random() * die) + 1;
         rolls.push(outcome);
     }
