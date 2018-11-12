@@ -139,7 +139,7 @@ function getRoll(cmd, drop){
     //Add all die rolls to a list and find the lowest roll.
     rolls = [];
     for(j = 0; j < quantity; j++){
-        outcome = Math.floor(Math.random() * die) + 1 + modifier;
+        outcome = Math.floor(Math.random() * die) + 1;
         rolls.push(outcome);
     }
     
@@ -157,6 +157,7 @@ function getRoll(cmd, drop){
         }
         results += rolls[k] + ' ';
     }
+    sum += modifier;
 
     //Return command, roll, sum as a hash
     return {
@@ -190,12 +191,12 @@ function usage(message){
     let embed = genBasicEmbed("Here are some ways you can talk to me:")
         .addField(`${auth.prefix}about`, "Learn about me")
         .addField(`${auth.prefix}usage`, "Learn how to talk to me")
-        .addField(`${auth.prefix}roll [dice1...] --drop`, 
+        .addField(`${auth.prefix}roll [dice1 ...] --drop`, 
             "I'll roll the specified die.\nDie can be specified as `20`, `d10`, `3d12`, `d6+2`, etc.\nCan roll any number of die.\n`--drop` is optional, but if you add it I will drop the lowest roll.")
-        .addField(`${auth.prefix}stats [name1...]`, "I'll look up some stats for you. I'll look up yours if you don't specify character(s).")
-        .addField(`${auth.prefix}bio [name1...]`, "I'll to look up some bios. I'll look up yours if you don't specify character(s).")
-        .addField(`${auth.prefix}readbio [name1...]`, "I'll send you some adventurer(s)'s complete life story. I'll send your own if you don't specify character(s).")
-        .addField(`${auth.prefix}get [stat] [name1...]`, "I'll tell you the proficiencies for a given stat. I'll look up yours if you don't specify character(s).")
+        .addField(`${auth.prefix}stats [name1 ...]`, "I'll look up some stats for you. I'll look up yours if you don't specify character(s).")
+        .addField(`${auth.prefix}bio [name1 ...]`, "I'll to look up some bios. I'll look up yours if you don't specify character(s).")
+        .addField(`${auth.prefix}readbio [name1 ...]`, "I'll send you some adventurer(s)'s complete life story. I'll send your own if you don't specify character(s).")
+        .addField(`${auth.prefix}get [stat] [name1 ...]`, "I'll tell you the proficiencies for a given stat. I'll look up yours if you don't specify character(s).")
 
     message.channel.send(embed);
 }
