@@ -306,22 +306,23 @@ function getProficiency(skill, characters, message){
         //Load the character data
         try{
             data = require('./pcs/' + characters[i] + '.json');
+                    //Get proficiency if it is a stat
+            var dice = data.stats[skill]
+            if(dice != undefined){
+                values.push({ 'name': data.name, 'stat': `${dice}`});
+            }
+            else{
+                //Get proficiency if it is a skill
+                dice = getSkillValue(skill, skills, data);
+                if(dice != undefined){
+                    values.push({ 'name': data.name, 'stat': `${dice}`});
+                }
+            }
         }
         catch(e){
             //Print a message if the character could not be found
             message.channel.send(`${characters[i]} isn't here.`);
-        }
-        //Get proficiency if it is a stat
-        var dice = data.stats[skill]
-        if(dice != undefined){
-            values.push({ 'name': data.name, 'stat': `${dice}`});
-        }
-        else{
-            //Get proficiency if it is a skill
-            dice = getSkillValue(skill, skills, data);
-            if(dice != undefined){
-                values.push({ 'name': data.name, 'stat': `${dice}`});
-            }
+            ;
         }
     }
     //If some values were found for a specific stat
