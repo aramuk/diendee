@@ -1,5 +1,5 @@
 const Discord = require("discord.js");
-const fs = require('fs');
+const fs = require('fs-extra');
 var auth = require('./auth.json');
 
 //A mapping of userIDs to characters
@@ -471,7 +471,61 @@ function genFlavorText(){
 }
 
 function hp(message, params){
-    
+    //Print the stats of all the specified characters
+    if(params.length >= 1){
+        //Get the amount to increment the hp by and check if its valid
+        var choice = params.shift().toLowerCase();
+        if(choice != 'max'){
+            choice = parseInt(choice);
+            if(isNaN(choice)){
+                message.channel.send('Please enter `max` or a number after hp.');
+                return;
+            }
+        }
+        //If no character was specified, update the sender's character's hp
+        var pcs = [];
+        if(params.length == 0){
+            var mapping = require('./mapping.json');
+            pcs.push(mapping['u' + message.author.id]);
+        }
+        //Otherwise update the hp of the specified characters.
+        else{
+            pcs = pcs.concat(params);
+        }
+
+        //Edit the hp for each requested pc
+        pcs.forEach(function(pc){
+            var path = './pcs/' + pc + '.json';
+            var data = {}
+            //Make sure the suggested pc exists
+            try{
+                data = require(path);
+                editHP(data, path, choice);
+            }
+            catch(err){
+                message.channel.send('Sorry, I could not find ' + pc + '.');
+            }
+        });
+        message.channel.send('HPs updated for: ' + pcs);
+    }
+    //If there was no statistic specified
+    else{
+        message.channel.send('You must specify a character and a value.');
+    }
+}
+
+function editHP(data, path, value){
+    if(value == 'max'){
+        data.hp.current = data.hp.max;
+    }
+    else{
+        data.hp.current += value;
+    }
+    fs.writeJSON(path, data, function(err){
+        if(err){
+            console.log("Error: ", err);
+        }
+    });
 }
 
 //Bot login
