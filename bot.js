@@ -129,21 +129,13 @@ function getRoll(cmd, drop){
         }
     }
 
-    plusIndex = cmd.indexOf('+');
+    //Find the type of die to roll
+    die = parseInt(cmd.substring(dIndex +1));
 
     //Find the number of die to roll
     quantity = 1;
     if(dIndex > 0){
         quantity = parseInt(cmd.substring(0, dIndex));
-    }
-
-    //Find the type of die to roll
-    die = parseInt(cmd.substring(dIndex +1));
-    modifier = 0;
-    //If there is a bonus specified, get type of die and modifier
-    if(plusIndex != -1){
-        die = parseInt(cmd.substring(dIndex + 1, plusIndex));
-        modifier = parseInt(cmd.substring(plusIndex + 1));
     }
 
     //Add all die rolls to a list and find the lowest roll.
@@ -153,27 +145,17 @@ function getRoll(cmd, drop){
         rolls.push(outcome);
     }
     
-    minI = undefined;
     if(drop){
         minI = getMinIndex(rolls);
+        console.log('Dropping ' + rolls[minI] + ' from ' + cmd);
+        rolls.splice(minI, 1);
     }
-
-    //Find the sum of the die rolls, not including the lowest roll.
-    var sum = 0;
-    results = '';
-    for(k = 0; k < rolls.length; k++){
-        if(!drop || k != minI){
-            sum += rolls[k];
-        }
-        results += rolls[k] + ' ';
-    }
-    sum += modifier;
 
     //Return command, roll, sum as a hash
     return {
         name: `${cmd}: `,
-        value: `${results}\nTotal: ${sum}`
-    };
+        value: `${rolls}\n`
+    }
 }
 
 function getMinIndex(rolls){
