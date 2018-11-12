@@ -137,19 +137,20 @@ function getRoll(cmd, drop){
     }
 
     //Add all die rolls to a list and find the lowest roll.
-    results = '';
-    minI = undefined;
     rolls = [];
     for(j = 0; j < quantity; j++){
         outcome = Math.floor(Math.random() * die) + 1 + modifier;
-        if(!minI || outcome < rolls[minI]){
-            minI = rolls.length;
-        }
         rolls.push(outcome);
     }
     
+    minI = undefined;
+    if(drop){
+        minI = getMinIndex(rolls);
+    }
+
     //Find the sum of the die rolls, not including the lowest roll.
     var sum = 0;
+    results = '';
     for(k = 0; k < rolls.length; k++){
         if(!drop || k != minI){
             sum += rolls[k];
@@ -162,6 +163,16 @@ function getRoll(cmd, drop){
         name: `${cmd}: `,
         value: `${results}\nTotal: ${sum}`
     };
+}
+
+function getMinIndex(rolls){
+    var minI = 0;
+    for(m = 0; m < rolls.length; m++){
+        if(rolls[m] < rolls[minI]){
+            minI = m;
+        }
+    }
+    return minI;
 }
 
 //Print information about Diendee
