@@ -251,9 +251,10 @@ function printStats(character, message){
                     vals[s] = data.stats[key][0] + 'g';
                 }
             }
+            //Add formatted values to the embed to be outputted
             embed.addField(`**${key}: ${data.stats[key][0]}**`, formatHash(vals), true);
         }
-
+        //Send values to the channel
         message.channel.send({embed, files: [{ attachment: data.icon, name: 'image.png' }]});
     }catch(e){
         message.channel.send(`${character} isn't here.`);
@@ -269,11 +270,11 @@ function get(message, params){
         //If no character was specified, print the sender's character's stats
         if(params.length == 0){
             var pc = mapping['u' + message.author.id];
-            getProficiency(choice, [pc], message);
+            printRequestedSkill(choice, [pc], message);
         }
         //Othewise prin thte stats of all specified characters
         else{
-            getProficiency(choice, params, message);
+            printRequestedSkill(choice, params, message);
         }
     }
     //If there was no statistic specified
@@ -283,61 +284,68 @@ function get(message, params){
 }
 
 //Gets the proficiency values for some characters in a particular skill
-function getProficiency(skill, characters, message){
+function printRequestedSkill(skill, characters, message){
     var skills = require('./pcs/skills.json');
-    var data = ''
+
+    //Check whether the requested skill is either skill or a stat
+    var stat = ''
+    skillLoop:
+    for(key in skills){
+        if(key == skill){
+            stat = key
+            break;
+        }
+        for(i = 0; i < skills[key].length; i++){
+            if(skills[key][i] == skill){
+                stat = key;
+                break skillLoop;
+            }
+        }
+    }
+
+    //If the stat is not valid, return it
+    if(stat == ''){
+        message.channel.send(genBasicEmbed(`_${skill}_ is not a valid stat`));
+        return;
+    }
+
+    //Find the stat value for each character
     var values = []
-    //Loop through all the characters
     for(i = 0; i < characters.length; i++){
-        //Load the character data
+        var data = '';
+        //Check to see if the character exists
         try{
-            data = require('./pcs/' + characters[i] + '.json');
+            data = require('./pcs/' + characters[i]+ '.json');
+            var val = 0;
+            //Get the value if the requested value is a stat
+            if(stat == skill){
+                val = data.stats[stat][0];
+            }
+            //Get the value if the requested value is a stat
+            else{
+                //Get the value if there are proficiencies
+                if(data.stats[stat][1][skill]){
+                    val = data.stats[stat][0] + 'g+' + data.stats[stat][1][skill] + 'y';
+                }
+                //Get the value if there are no proficiencies
+                else{
+                    val = data.stats[stat][0] + 'g';
+                }
+            }
+            values.push({"name": data.name, "stat": `${val}`});
         }
         catch(e){
-            //Print a message if the character could not be found
             message.channel.send(`${characters[i]} isn't here.`);
         }
-        //Get proficiency if it is a stat
-        var dice = data.stats[skill]
-        if(dice != undefined){
-            values.push({ 'name': data.name, 'stat': `${dice}`});
-        }
-        else{
-            //Get proficiency if it is a skill
-            dice = getSkillValue(skill, skills, data);
-            if(dice != undefined){
-                values.push({ 'name': data.name, 'stat': `${dice}`});
-            }
-        }
     }
-    //If some values were found for a specific stat
+
+    //Print all the requested stat values
     if(values.length > 0){
         var output = ''
-        for(k = 0; k < values.length; k++){
-            output += '**' + values[k].name + '**: ' + values[k].stat + '\n';
+        for(i = 0; i < values.length; i++){
+            output += '**' + values[i].name + '**: ' + values[i].stat + '\n';
         }
         message.channel.send(genBasicEmbed(`Here are the values for _${skill}_:\n\n${output}`));
-    }
-    //Error message if invalid stat
-    else{
-        message.channel.send(genBasicEmbed(`_${skill}_ is not a valid stat`));
-    }
-}
-
-//Gets the value of a skill given the skill, the set of all skills, and user data
-function getSkillValue(skill, skills, data){
-    for(key in skills){
-        for(j = 0; j < skills[key].length; j++){
-            if(skills[key][j] == skill){
-                var bonus = data.specializations[skill];
-                if(bonus){
-                    return `${data.stats[key] - bonus}g+${bonus}y`;
-                }
-                else{
-                    return `${data.stats[key]}g`;
-                }
-            }
-        }
     }
 }
 
