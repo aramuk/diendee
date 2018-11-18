@@ -472,6 +472,12 @@ function genFlavorText(){
 }
 
 function hp(message, params){
+    // if(message.author.id != 190515236434870272 && message.author.id != 190355784859779073){
+    if(message.author.id != 190515236434870272){
+        message.channel.send(genBasicEmbed('You are not authorized to use that command.'));
+        return;
+    }
+
     //Print the stats of all the specified characters
     if(params.length >= 1){
         //Get the amount to increment the hp by and check if its valid
