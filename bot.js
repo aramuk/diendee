@@ -236,43 +236,30 @@ function printStats(character, message){
             .setColor(data.color)
             .setDescription(`**HP:** ${data.hp.current}/${data.hp.max}`);
 
-        var skills = getSkills(data);
-        for(j = 0; j < skills.length; j++){
-            embed.addField(`${skills[j].cat}`, formatHash(skills[j].specs), true);
+        //Get the possible skills
+        var skills = require('./pcs/skills.json');
+        //Get the values for each main stat
+        for(key in data.stats){
+            var vals = {}
+            //Get the values for each proficiency within the main stat
+            for(j = 0; j < skills[key].length; j++){
+                var s = skills[key][j]
+                if(data.stats[key][1][s]){
+                    vals[s] = data.stats[key][0] + 'g+' + data.stats[key][1][s] + 'y';
+                }
+                else{
+                    vals[s] = data.stats[key][0] + 'g';
+                }
+            }
+            //Add formatted values to the embed to be outputted
+            embed.addField(`**${key}: ${data.stats[key][0]}**`, formatHash(vals), true);
         }
-
+        //Send values to the channel
         message.channel.send({embed, files: [{ attachment: data.icon, name: 'image.png' }]});
     }catch(e){
         message.channel.send(`${character} isn't here.`);
+        console.log(e);
     }
-}
-
-//Returns a list of skills values sorted by stat
-function getSkills(data){
-    var categories = require('./pcs/skills.json');
-
-    var columns = [];
-    //For each stat, create a column with the stat as the title and the skills as the fields
-    for(key in data.stats){
-        var fields = {
-            cat: `**${key}: ${data.stats[key]}**`,
-            specs: {}
-        }
-        //Loop through all the skills for a category and add their values to the column.
-        for(i = 0; i < categories[key].length; i++){
-            var bonus = `${data.specializations[categories[key][i]]}`;
-            //Get yellow die if available
-            if(bonus != 'undefined'){
-                fields.specs[`${categories[key][i]}`] = `${data.stats[key] - bonus}g+${bonus}y`;
-            }
-            //Else print just the green die
-            else{
-                fields.specs[`${categories[key][i]}`] = `${data.stats[key]}g`;
-            }
-        }
-        columns.push(fields);
-    }
-    return columns;
 }
 
 function get(message, params){
@@ -283,11 +270,11 @@ function get(message, params){
         //If no character was specified, print the sender's character's stats
         if(params.length == 0){
             var pc = mapping['u' + message.author.id];
-            getProficiency(choice, [pc], message);
+            printRequestedSkill(choice, [pc], message);
         }
         //Othewise prin thte stats of all specified characters
         else{
-            getProficiency(choice, params, message);
+            printRequestedSkill(choice, params, message);
         }
     }
     //If there was no statistic specified
@@ -297,62 +284,68 @@ function get(message, params){
 }
 
 //Gets the proficiency values for some characters in a particular skill
-function getProficiency(skill, characters, message){
+function printRequestedSkill(skill, characters, message){
     var skills = require('./pcs/skills.json');
-    var data = ''
-    var values = []
-    //Loop through all the characters
-    for(i = 0; i < characters.length; i++){
-        //Load the character data
-        try{
-            data = require('./pcs/' + characters[i] + '.json');
-                    //Get proficiency if it is a stat
-            var dice = data.stats[skill]
-            if(dice != undefined){
-                values.push({ 'name': data.name, 'stat': `${dice}`});
+
+    //Check whether the requested skill is either skill or a stat
+    var stat = ''
+    skillLoop:
+    for(key in skills){
+        if(key == skill){
+            stat = key
+            break;
+        }
+        for(i = 0; i < skills[key].length; i++){
+            if(skills[key][i] == skill){
+                stat = key;
+                break skillLoop;
             }
+        }
+    }
+
+    //If the stat is not valid, return it
+    if(stat == ''){
+        message.channel.send(genBasicEmbed(`_${skill}_ is not a valid stat`));
+        return;
+    }
+
+    //Find the stat value for each character
+    var values = []
+    for(i = 0; i < characters.length; i++){
+        var data = '';
+        //Check to see if the character exists
+        try{
+            data = require('./pcs/' + characters[i]+ '.json');
+            var val = 0;
+            //Get the value if the requested value is a stat
+            if(stat == skill){
+                val = data.stats[stat][0];
+            }
+            //Get the value if the requested value is a stat
             else{
-                //Get proficiency if it is a skill
-                dice = getSkillValue(skill, skills, data);
-                if(dice != undefined){
-                    values.push({ 'name': data.name, 'stat': `${dice}`});
+                //Get the value if there are proficiencies
+                if(data.stats[stat][1][skill]){
+                    val = data.stats[stat][0] + 'g+' + data.stats[stat][1][skill] + 'y';
+                }
+                //Get the value if there are no proficiencies
+                else{
+                    val = data.stats[stat][0] + 'g';
                 }
             }
+            values.push({"name": data.name, "stat": `${val}`});
         }
         catch(e){
-            //Print a message if the character could not be found
             message.channel.send(`${characters[i]} isn't here.`);
-            ;
         }
     }
-    //If some values were found for a specific stat
+
+    //Print all the requested stat values
     if(values.length > 0){
         var output = ''
-        for(k = 0; k < values.length; k++){
-            output += '**' + values[k].name + '**: ' + values[k].stat + '\n';
+        for(i = 0; i < values.length; i++){
+            output += '**' + values[i].name + '**: ' + values[i].stat + '\n';
         }
         message.channel.send(genBasicEmbed(`Here are the values for _${skill}_:\n\n${output}`));
-    }
-    //Error message if invalid stat
-    else{
-        message.channel.send(genBasicEmbed(`_${skill}_ is not a valid stat`));
-    }
-}
-
-//Gets the value of a skill given the skill, the set of all skills, and user data
-function getSkillValue(skill, skills, data){
-    for(key in skills){
-        for(j = 0; j < skills[key].length; j++){
-            if(skills[key][j] == skill){
-                var bonus = data.specializations[skill];
-                if(bonus){
-                    return `${data.stats[key] - bonus}g+${bonus}y`;
-                }
-                else{
-                    return `${data.stats[key]}g`;
-                }
-            }
-        }
     }
 }
 
@@ -387,6 +380,12 @@ function printBio(character, message){
         //Read character data from a file
         var data = require('./pcs/' + character + '.json');
         var acct = client.users.get(data.player)
+
+        var stats = {}
+        for(key in data.stats){
+            stats[key] = data.stats[key][0];
+        }
+
         let embed = new Discord.RichEmbed()
             .setAuthor(acct.username, acct.displayAvatarURL)
             .setTitle(`**${data.name}** - ${data.title} - (Level ${data.level} ${data.class})`)
@@ -396,7 +395,7 @@ function printBio(character, message){
             .setDescription(`**HP**: ${data.hp.current}/${data.hp.max}\n**Available XP**: ${data.xp.available} **Total XP**: ${data.xp.total}`)
             //Print characteristics and statistics
             .addField('**Characteristics**', formatHash(data.characteristics), true)
-            .addField('**Statistics**', formatHash(data.stats), true)
+            .addField('**Statistics**', formatHash(stats), true)
             .addBlankField()
             //Print a preview to the bio
             .addField('**Bio Preview**', data.bio_preview + "\n\nUse the `$readbio` command to continue reading.")
