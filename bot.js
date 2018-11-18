@@ -236,13 +236,12 @@ function printStats(character, message){
             .setColor(data.color)
             .setDescription(`**HP:** ${data.hp.current}/${data.hp.max}`);
 
-        // // var skills = getSkills(data);
-        // for(j = 0; j < skills.length; j++){
-        //     embed.addField(`${skills[j].cat}`, formatHash(skills[j].specs), true);
-        // }
+        //Get the possible skills
         var skills = require('./pcs/skills.json');
+        //Get the values for each main stat
         for(key in data.stats){
             var vals = {}
+            //Get the values for each proficiency within the main stat
             for(j = 0; j < skills[key].length; j++){
                 var s = skills[key][j]
                 if(data.stats[key][1][s]){
@@ -260,34 +259,6 @@ function printStats(character, message){
         message.channel.send(`${character} isn't here.`);
         console.log(e);
     }
-}
-
-//Returns a list of skills values sorted by stat
-function getSkills(data){
-    var categories = require('./pcs/skills.json');
-
-    var columns = [];
-    //For each stat, create a column with the stat as the title and the skills as the fields
-    for(key in data.stats){
-        var fields = {
-            cat: `**${key}: ${data.stats[key]}**`,
-            specs: {}
-        }
-        //Loop through all the skills for a category and add their values to the column.
-        for(i = 0; i < categories[key].length; i++){
-            var bonus = `${data.specializations[categories[key][i]]}`;
-            //Get yellow die if available
-            if(bonus != 'undefined'){
-                fields.specs[`${categories[key][i]}`] = `${data.stats[key] - bonus}g+${bonus}y`;
-            }
-            //Else print just the green die
-            else{
-                fields.specs[`${categories[key][i]}`] = `${data.stats[key]}g`;
-            }
-        }
-        columns.push(fields);
-    }
-    return columns;
 }
 
 function get(message, params){
