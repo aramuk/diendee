@@ -236,14 +236,29 @@ function printStats(character, message){
             .setColor(data.color)
             .setDescription(`**HP:** ${data.hp.current}/${data.hp.max}`);
 
-        var skills = getSkills(data);
-        for(j = 0; j < skills.length; j++){
-            embed.addField(`${skills[j].cat}`, formatHash(skills[j].specs), true);
+        // // var skills = getSkills(data);
+        // for(j = 0; j < skills.length; j++){
+        //     embed.addField(`${skills[j].cat}`, formatHash(skills[j].specs), true);
+        // }
+        var skills = require('./pcs/skills.json');
+        for(key in data.stats){
+            var vals = {}
+            for(j = 0; j < skills[key].length; j++){
+                var s = skills[key][j]
+                if(data.stats[key][1][s]){
+                    vals[s] = data.stats[key][0] + 'g+' + data.stats[key][1][s] + 'y';
+                }
+                else{
+                    vals[s] = data.stats[key][0] + 'g';
+                }
+            }
+            embed.addField(`**${key}: ${data.stats[key][0]}**`, formatHash(vals), true);
         }
 
         message.channel.send({embed, files: [{ attachment: data.icon, name: 'image.png' }]});
     }catch(e){
         message.channel.send(`${character} isn't here.`);
+        console.log(e);
     }
 }
 
@@ -391,7 +406,7 @@ function printBio(character, message){
         for(key in data.stats){
             stats[key] = data.stats[key][0];
         }
-        
+
         let embed = new Discord.RichEmbed()
             .setAuthor(acct.username, acct.displayAvatarURL)
             .setTitle(`**${data.name}** - ${data.title} - (Level ${data.level} ${data.class})`)
