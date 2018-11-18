@@ -386,6 +386,12 @@ function printBio(character, message){
         //Read character data from a file
         var data = require('./pcs/' + character + '.json');
         var acct = client.users.get(data.player)
+
+        var stats = {}
+        for(key in data.stats){
+            stats[key] = data.stats[key][0];
+        }
+        
         let embed = new Discord.RichEmbed()
             .setAuthor(acct.username, acct.displayAvatarURL)
             .setTitle(`**${data.name}** - ${data.title} - (Level ${data.level} ${data.class})`)
@@ -395,7 +401,7 @@ function printBio(character, message){
             .setDescription(`**HP**: ${data.hp.current}/${data.hp.max}\n**Available XP**: ${data.xp.available} **Total XP**: ${data.xp.total}`)
             //Print characteristics and statistics
             .addField('**Characteristics**', formatHash(data.characteristics), true)
-            .addField('**Statistics**', formatHash(data.stats), true)
+            .addField('**Statistics**', formatHash(stats), true)
             .addBlankField()
             //Print a preview to the bio
             .addField('**Bio Preview**', data.bio_preview + "\n\nUse the `$readbio` command to continue reading.")
