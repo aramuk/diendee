@@ -251,11 +251,16 @@ function printStats(character, message){
                     vals[s] = data.stats[key][1][s];
                 }
                 else{
-                    vals[s] = data.stats[key][0];
+                    vals[s] = Math.floor((data.stats[key][0] - 10)/2);
                 }
             }
-            //Add formatted values to the embed to be outputted
-            embed.addField(`**${key}: ${data.stats[key][0]}**`, formatHash(vals), true);
+            if(key == "Constitution"){
+                embed.addField(`**${key}: ${data.stats[key][0]}**`, "_None_", true);
+            }
+            else{
+                //Add formatted values to the embed to be outputted
+                embed.addField(`**${key}: ${data.stats[key][0]}**`, formatHash(vals), true);
+            }
         }
         //Send values to the channel
         message.channel.send({embed, files: [{ attachment: data.icon, name: 'image.png' }]});
