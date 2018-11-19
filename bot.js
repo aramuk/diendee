@@ -53,6 +53,7 @@ client.on("message", function(message){
             case 'readbio':
                 readbio(message, args);
                 break;
+            //$hp
             case 'hp':
                 hp(message, args);
                 break;
@@ -65,6 +66,7 @@ function helloThere(message){
     message.channel.send('General Kenobi!\nYou are a bold one.\nhttps://www.youtube.com/watch?v=frszEJb0aOo');
 }
 
+//Create a basic embed format for Diendee
 function genBasicEmbed(text){
     let embed = new Discord.RichEmbed()
         .setThumbnail(client.user.displayAvatarURL)
@@ -175,6 +177,7 @@ function getRoll(cmd, drop){
     return rolls;
 }
 
+//Gets the index of the lowest value in the array
 function getMinIndex(rolls){
     var minI = 0;
     for(m = 0; m < rolls.length; m++){
@@ -245,10 +248,10 @@ function printStats(character, message){
             for(j = 0; j < skills[key].length; j++){
                 var s = skills[key][j]
                 if(data.stats[key][1][s]){
-                    vals[s] = data.stats[key][0] + 'g+' + data.stats[key][1][s] + 'y';
+                    vals[s] = data.stats[key][1][s];
                 }
                 else{
-                    vals[s] = data.stats[key][0] + 'g';
+                    vals[s] = data.stats[key][0];
                 }
             }
             //Add formatted values to the embed to be outputted
