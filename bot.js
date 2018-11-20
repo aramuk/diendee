@@ -237,7 +237,7 @@ function printStats(character, message){
             .setThumbnail('attachment://image.png')
             .setTitle(`**${data.name}** - ${data.title} - (Level ${data.level} ${data.class})`)
             .setColor(data.color)
-            .setDescription(`**HP:** ${data.hp.current}/${data.hp.max}`);
+            .setDescription(`**HP:** ${data.combat.current}/${data.combat.max} · **Hit Dice:** ${data.combat.hit_dice} · **AC:** ${data.combat.AC} · **Speed:** ${data.combat.speed} · **Initiative:** ${data.combat.initiative}`);
 
         //Get the possible skills
         var skills = require('./pcs/skills.json');
@@ -400,11 +400,12 @@ function printBio(character, message){
             //Character portrait
             .setThumbnail('attachment://image.png')
             //Print character exp
-            .setDescription(`**HP**: ${data.hp.current}/${data.hp.max}\n**Available XP**: ${data.xp.available} **Total XP**: ${data.xp.total}`)
+            .setDescription(`**Available XP**: ${data.xp.available} **Total XP**: ${data.xp.total}`)
             //Print characteristics and statistics
             .addField('**Characteristics**', formatHash(data.characteristics), true)
             .addField('**Statistics**', formatHash(stats), true)
-            .addBlankField()
+            .addField('**HP**', formatHash(data.hp), true)
+            .addField('**Combat**', formatHash(data.combat), true)
             //Print a preview to the bio
             .addField('**Bio Preview**', data.bio_preview + "\n\nUse the `$readbio` command to continue reading.")
             .setColor(data.color);
