@@ -211,6 +211,7 @@ function usage(message){
         .addField(`${auth.prefix}bio [name1 ...]`, "I'll to look up some bios. I'll look up yours if you don't specify character(s).")
         .addField(`${auth.prefix}readbio [name1 ...]`, "I'll send you some adventurer(s)'s complete life story. I'll send your own if you don't specify character(s).")
         .addField(`${auth.prefix}get [stat] [name1 ...]`, "I'll tell you the proficiencies for a given stat. I'll look up yours if you don't specify character(s).")
+        .addField(`${auth.prefix}initiative`, "I'll find the initiative values for you and pin it to the channel");
 
     message.channel.send(embed);
 }
