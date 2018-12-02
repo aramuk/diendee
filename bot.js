@@ -92,7 +92,7 @@ function roll(message, args){
         output = getRollOutput(args);
         
         //Print the hashes to the channel where they were requested
-        var test = new Discord.RichEmbed()
+        let embed = new Discord.RichEmbed()
             //Set thumbnail to Diendee's profile pic
             .setThumbnail(client.user.displayAvatarURL)
             //Set author to the person who requested the roll
@@ -100,10 +100,10 @@ function roll(message, args){
             .setColor('#fcce63');
 
         //Add each dice roll as a field
-        for(i = 0; i < output.length; i++){
-            test.addField(output[i].name, output[i].value, true);
-        }
-        message.channel.send(test);
+        output.forEach(function(elem){
+            embed.addField(elem.name, elem.value, true);
+        });
+        message.channel.send(embed);
     }
 }
 
@@ -118,30 +118,30 @@ function getRollOutput(cmds){
     //Get the roll corresponding to each command and add it to a list
     fields = [];
     //Run through all sets of commands
-    for(i = 0; i < cmds.length; i++){
+    cmds.forEach(function(cmd){
         //Find the individual sets of rolls in those commands
-        dice = cmds[i].split(/\+/g);
+        dice = cmd.split(/\+/g);
         var output = '';
         var sum = 0;
         //Conduct each roll in the set of rolls
-        for(j = 0; j < dice.length; j++){
+        dice.forEach(function(die){
             //Get the rolls
-            var results = getRoll(dice[j], drop);
+            var results = getRoll(die, drop);
 
             //Sum up the rolls and format the output
-            output += `${dice[j]}:`;
-            for(k = 0; k < results.length; k++){
-                output += ` ${results[k]} `;
-                sum += results[k];
-            }
+            output += `${die}:`;
+            results.forEach(function(result){
+                output += ` ${result} `;
+                sum += result;
+            });
             output += '\n'
-        }
+        });
         //Add the outcomes of the rolls to the fields to be printed
         fields.push({
-            name: `${cmds[i]}:`,
+            name: `${cmd}:`,
             value: `${output}**Total**: ${sum}`
         });
-    }
+    });
     //Return all the fields to be printed
     return fields;
 }
@@ -155,7 +155,7 @@ function getRoll(cmd, drop){
     }
 
     //Find the type of die to roll
-    die = parseInt(cmd.substring(dIndex +1));
+    die = parseInt(cmd.substring(dIndex + 1));
 
     //Find the number of die to roll
     quantity = 1;
@@ -220,9 +220,9 @@ function usage(message){
 function stats(message, characters){
     //Print the stats of all the specified characters
     if(characters.length > 0){
-        for(k = 0; k < characters.length; k++){
-            printStats(characters[k], message);
-        }   
+        characters.forEach(function(character){
+            printStats(character, message);
+        });
     }
     //If no character was specified, print the sender's character's stats
     else{
@@ -234,13 +234,14 @@ function stats(message, characters){
 //Prints the stats of the specified character
 function printStats(character, message){
     try{
+        //Load character data
         var data = require('./pcs/'+ character + '.json');
 
         let embed = new Discord.RichEmbed()
             .setThumbnail('attachment://image.png')
             .setTitle(`**${data.name}** - ${data.title} - (Level ${data.level} ${data.class})`)
             .setColor(data.color)
-            .setDescription(`**HP:** ${data.hp.Current}/${data.hp.Max} · **AC:** ${data.combat.AC} · **Speed:** ${data.combat.Speed} · **Initiative:** ${data.combat.Initiative}`);
+            .setDescription(`**HP:** ${data.hp.Current}/${data.hp.Max} · **AC:** ${data.combat.AC} · **Speed:** ${data.combat.Speed}`);
 
         //Get the possible skills
         var skills = require('./pcs/skills.json');
@@ -248,15 +249,16 @@ function printStats(character, message){
         for(key in data.stats){
             var vals = {}
             //Get the values for each proficiency within the main stat
-            for(j = 0; j < skills[key].length; j++){
-                var s = skills[key][j]
-                if(data.stats[key][1][s]){
-                    vals[s] = data.stats[key][1][s];
+            skills[key].forEach(function(skill){
+                if(data.stats[key][1][skill]){
+                    vals[skill] = data.stats[key][1][skill];
                 }
                 else{
-                    vals[s] = Math.floor((data.stats[key][0] - 10)/2);
+                    vals[skill] = Math.floor((data.stats[key][0] - 10)/2);
                 }
-            }
+            });
+
+            //Constitution has no associated skills
             if(key == "Constitution"){
                 embed.addField(`**${key}: ${data.stats[key][0]}**`, "_None_", true);
             }
@@ -306,12 +308,12 @@ function printRequestedSkill(skill, characters, message){
             stat = key
             break;
         }
-        for(i = 0; i < skills[key].length; i++){
-            if(skills[key][i] == skill){
+        skills[key].forEach(function(s){
+            if(s == skill){
                 stat = key;
                 break skillLoop;
             }
-        }
+        });
     }
 
     //If the stat is not valid, return it
@@ -322,11 +324,11 @@ function printRequestedSkill(skill, characters, message){
 
     //Find the stat value for each character
     var values = []
-    for(i = 0; i < characters.length; i++){
+    characters.forEach(function(character){
         var data = '';
         //Check to see if the character exists
         try{
-            data = require('./pcs/' + characters[i]+ '.json');
+            data = require('./pcs/' + character + '.json');
             var val = 0;
             //Get the value if the requested value is a stat
             if(stat == skill){
@@ -346,16 +348,16 @@ function printRequestedSkill(skill, characters, message){
             values.push({"name": data.name, "stat": `${val}`});
         }
         catch(e){
-            message.channel.send(`${characters[i]} isn't here.`);
+            message.channel.send(`${character} isn't here.`);
         }
-    }
+    });
 
     //Print all the requested stat values
     if(values.length > 0){
         var output = ''
-        for(i = 0; i < values.length; i++){
-            output += '**' + values[i].name + '**: ' + values[i].stat + '\n';
-        }
+        values.forEach(function(value){
+            output += '**' + value.name + '**: ' + value.stat + '\n';
+        });
         message.channel.send(genBasicEmbed(`Here are the values for _${skill}_:\n\n${output}`));
     }
 }
@@ -373,9 +375,9 @@ function formatHash(hash){
 function bio(message, characters){
     //Print the bios of all the specified characters
     if(characters.length > 0){
-        for(i = 0; i < characters.length; i++){
-            printBio(characters[i], message);
-        }   
+        characters.forEach(function(character){
+            printBio(character, message);
+        });
     }
     //If no character was specified, print the sender's character's bio
     else{
@@ -552,20 +554,29 @@ function initiative(message){
     //Remove old pinned initiative values
     message.channel.fetchPinnedMessages().then(function(messages){
         messages = messages.array();
-        for(i = 0; i < messages.length; i++){
-            if(messages[i].author.id == client.user.id && messages[i].embeds[0].description.substring(0,message_text.length) == message_text){
-                messages[i].unpin();
+        messages.forEach(function(mes){
+            if(mes.author.id == client.user.id && mes.embeds[0].description.substring(0,message_text.length) == message_text){
+                mes.unpin();
             }
-        }
+        });
     });
 
     //Find the current initiative values
     var mapping = require('./mapping.json');
-    output = ''
+    vals = [];
     for(id in mapping){
         var data = require('./pcs/' + mapping[id] + '.json');
-        output += '**' + data.name + '**: ' + data.combat.Initiative + '\n';
+        var roll = getRoll('d20', false)[0];
+        vals.push({name: data.name, initiative: (roll + data.combat.Initiative)});
     }
+    vals.sort(function(a, b){
+        return b.initiative - a.initiative;
+    });
+
+    output = '';
+    vals.forEach(function(elem){
+        output += '**' + elem.name + '**: ' + elem.initiative + '\n';
+    });
 
     //Send the initiative values to the channel and pin them
     message.channel.send(genBasicEmbed(`${message_text}\n${output}`)).then(function(message){
