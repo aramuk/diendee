@@ -547,22 +547,28 @@ function editHP(data, path, value){
 }
 
 function initiative(message){
+    const message_text = 'Here are the initiative values: ';
+
+    //Remove old pinned initiative values
     message.channel.fetchPinnedMessages().then(function(messages){
         messages = messages.array();
         for(i = 0; i < messages.length; i++){
-            if(messages[i].author.id == client.user.id){
+            if(messages[i].author.id == client.user.id && messages[i].embeds[0].description.substring(0,message_text.length) == message_text){
                 messages[i].unpin();
             }
         }
     });
 
+    //Find the current initiative values
     var mapping = require('./mapping.json');
     output = ''
-    for(key in mapping){
-        var data = require('./pcs/' + mapping[key] + '.json');
+    for(id in mapping){
+        var data = require('./pcs/' + mapping[id] + '.json');
         output += '**' + data.name + '**: ' + data.combat.Initiative + '\n';
     }
-    message.channel.send(genBasicEmbed(`Here are the initiatve values: \n${output}`)).then(function(message){
+
+    //Send the initiative values to the channel and pin them
+    message.channel.send(genBasicEmbed(`${message_text}\n${output}`)).then(function(message){
         message.pin();
     });
 }
