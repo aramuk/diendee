@@ -57,6 +57,8 @@ client.on("message", function(message){
             case 'hp':
                 hp(message, args);
                 break;
+            case 'initiative':
+                initiative(message)
         }
     }
 });
@@ -237,7 +239,7 @@ function printStats(character, message){
             .setThumbnail('attachment://image.png')
             .setTitle(`**${data.name}** - ${data.title} - (Level ${data.level} ${data.class})`)
             .setColor(data.color)
-            .setDescription(`**HP:** ${data.combat.current}/${data.combat.max} · **Hit Dice:** ${data.combat.hit_dice} · **AC:** ${data.combat.AC} · **Speed:** ${data.combat.speed} · **Initiative:** ${data.combat.initiative}`);
+            .setDescription(`**HP:** ${data.hp.Current}/${data.hp.Max} · **AC:** ${data.combat.AC} · **Speed:** ${data.combat.Speed} · **Initiative:** ${data.combat.Initiative}`);
 
         //Get the possible skills
         var skills = require('./pcs/skills.json');
@@ -540,6 +542,27 @@ function editHP(data, path, value){
         if(err){
             console.log("Error: ", err);
         }
+    });
+}
+
+function initiative(message){
+    // message.channel.fetchPinnedMessages().then(function(messages){
+    //     for(m in messages){
+    //         console.log(m.content);
+    //         if(m.author.id == client.id){
+    //             m.unpin();
+    //         }
+    //     }
+    // });
+
+    var mapping = require('./mapping.json');
+    output = ''
+    for(key in mapping){
+        var data = require('./pcs/' + mapping[key] + '.json');
+        output += '**' + data.name + '**: ' + data.combat.Initiative + '\n';
+    }
+    message.channel.send(genBasicEmbed(`Here are the initiatve values: \n${output}`)).then(function(message){
+        message.pin()
     });
 }
 
