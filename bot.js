@@ -546,14 +546,14 @@ function editHP(data, path, value){
 }
 
 function initiative(message){
-    // message.channel.fetchPinnedMessages().then(function(messages){
-    //     for(m in messages){
-    //         console.log(m.content);
-    //         if(m.author.id == client.id){
-    //             m.unpin();
-    //         }
-    //     }
-    // });
+    message.channel.fetchPinnedMessages().then(function(messages){
+        messages = messages.array();
+        for(i = 0; i < messages.length; i++){
+            if(messages[i].author.id == client.user.id){
+                messages[i].unpin();
+            }
+        }
+    });
 
     var mapping = require('./mapping.json');
     output = ''
@@ -562,7 +562,7 @@ function initiative(message){
         output += '**' + data.name + '**: ' + data.combat.Initiative + '\n';
     }
     message.channel.send(genBasicEmbed(`Here are the initiatve values: \n${output}`)).then(function(message){
-        message.pin()
+        message.pin();
     });
 }
 
