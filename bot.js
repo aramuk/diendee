@@ -58,7 +58,7 @@ client.on("message", function(message){
                 hp(message, args);
                 break;
             case 'initiative':
-                initiative(message)
+                initiative(message, args)
         }
     }
 });
@@ -211,7 +211,7 @@ function usage(message){
         .addField(`${auth.prefix}bio [name1 ...]`, "I'll to look up some bios. I'll look up yours if you don't specify character(s).")
         .addField(`${auth.prefix}readbio [name1 ...]`, "I'll send you some adventurer(s)'s complete life story. I'll send your own if you don't specify character(s).")
         .addField(`${auth.prefix}get [stat] [name1 ...]`, "I'll tell you the proficiencies for a given stat. I'll look up yours if you don't specify character(s).")
-        .addField(`${auth.prefix}initiative`, "I'll find the initiative values for you and pin it to the channel");
+        .addField(`${auth.prefix}initiative [npc:modifier ...]`, "I'll roll initiative for you and pin it to the channel. I can roll NPCs too if you give me their name and initiative modifier.");
 
     message.channel.send(embed);
 }
@@ -241,7 +241,7 @@ function printStats(character, message){
             .setThumbnail('attachment://image.png')
             .setTitle(`**${data.name}** - ${data.title} - (Level ${data.level} ${data.class})`)
             .setColor(data.color)
-            .setDescription(`**HP:** ${data.hp.Current}/${data.hp.Max} · **AC:** ${data.combat.AC} · **Speed:** ${data.combat.Speed}`);
+            .setDescription(`**HP:** ${data.hp.current}/${data.hp.max} · **AC:** ${data.combat.ac} · **Speed:** ${data.combat.speed}`);
 
         //Get the possible skills
         var skills = require('./pcs/skills.json');
@@ -404,13 +404,13 @@ function printBio(character, message){
             .setTitle(`**${data.name}** - ${data.title} - (Level ${data.level} ${data.class})`)
             //Character portrait
             .setThumbnail('attachment://image.png')
-            //Print character exp
-            .setDescription(`**Available XP**: ${data.xp.available} **Total XP**: ${data.xp.total}`)
+            //Print character Stats
+            .setDescription(`**Available XP**: ${data.xp.available} · **Total XP**:${data.xp.total}`)
             //Print characteristics and statistics
             .addField('**Characteristics**', formatHash(data.characteristics), true)
             .addField('**Statistics**', formatHash(stats), true)
-            .addField('**HP**', formatHash(data.hp), true)
-            .addField('**Combat**', formatHash(data.combat), true)
+            .addField('**Combat**', `**HP:** ${data.hp.current}/${data.hp.max}\n**AC:** ${data.combat.ac}\n**Speed:** ${data.combat.speed}`, true)
+            .addBlankField(true)
             //Print a preview to the bio
             .addField('**Bio Preview**', data.bio_preview + "\n\nUse the `$readbio` command to continue reading.")
             .setColor(data.color);
@@ -485,8 +485,8 @@ function genFlavorText(){
 }
 
 function hp(message, params){
-    // if(message.author.id != 190515236434870272 && message.author.id != 190355784859779073){
-    if(message.author.id != 190515236434870272){
+    if(message.author.id != 190515236434870272 && message.author.id != 190355784859779073){
+    // if(message.author.id != 190515236434870272){
         message.channel.send(genBasicEmbed('You are not authorized to use that command.'));
         return;
     }
@@ -548,7 +548,7 @@ function editHP(data, path, value){
     });
 }
 
-function initiative(message){
+function initiative(message, npcs){
     const message_text = 'Here are the initiative values: ';
 
     //Remove old pinned initiative values
@@ -566,8 +566,14 @@ function initiative(message){
     vals = [];
     for(id in mapping){
         var data = require('./pcs/' + mapping[id] + '.json');
-        var roll = getRoll('d20', false)[0];
-        vals.push({name: data.name, initiative: (roll + data.combat.Initiative)});
+        vals.push({name: data.name, initiative: (getRoll('d20', false)[0] + data.initiative_bonus)});
+    }
+    if(npcs){
+        npcs.forEach(function(npc){
+            params = npc.split(/\:/g);
+            params[1] = parseInt(params[1]);
+            vals.push({name: params[0], initiative: (getRoll('d20', false)[0] + params[1])});
+        });
     }
     vals.sort(function(a, b){
         return b.initiative - a.initiative;
