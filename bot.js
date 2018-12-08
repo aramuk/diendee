@@ -484,6 +484,7 @@ function genFlavorText(){
     }
 }
 
+//Update the HP values of the requested characters
 function hp(message, params){
     if(message.author.id != 190515236434870272 && message.author.id != 190355784859779073){
     // if(message.author.id != 190515236434870272){
@@ -534,6 +535,7 @@ function hp(message, params){
     }
 }
 
+//Edits the HP of the requested characters
 function editHP(data, path, value){
     if(value == 'max'){
         data.hp.current = data.hp.max;
@@ -548,36 +550,26 @@ function editHP(data, path, value){
     });
 }
 
-function initiative(message, npcs){
-    const message_text = 'Here are the initiative values: ';
-
-    //Remove old pinned initiative values
+//Remove all pinned messages sent by Diendee that start with the specified text
+function removePinnedMessages(message, start_text){
     message.channel.fetchPinnedMessages().then(function(messages){
         messages = messages.array();
         messages.forEach(function(mes){
-            if(mes.author.id == client.user.id && mes.embeds[0].description.substring(0,message_text.length) == message_text){
+            if(mes.author.id == client.user.id && mes.embeds[0].description.substring(0,start_text.length) == start_text){
                 mes.unpin();
             }
         });
     });
+}
 
-    //Find the current initiative values
-    var mapping = require('./mapping.json');
-    vals = [];
-    for(id in mapping){
-        var data = require('./pcs/' + mapping[id] + '.json');
-        vals.push({name: data.name, initiative: (getRoll('d20', false)[0] + data.initiative_bonus)});
-    }
-    if(npcs){
-        npcs.forEach(function(npc){
-            params = npc.split(/\:/g);
-            params[1] = parseInt(params[1]);
-            vals.push({name: params[0], initiative: (getRoll('d20', false)[0] + params[1])});
-        });
-    }
-    vals.sort(function(a, b){
-        return b.initiative - a.initiative;
-    });
+function initiative(message, npcs){
+    const message_text = 'Here are the initiative values: ';
+
+    //Remove old pinned initiative values
+    removePinnedMessages(message, message_text);
+
+    //Generate initiative values
+    vals = getInitiativeRoll(npcs);
 
     output = '';
     vals.forEach(function(elem){
@@ -589,6 +581,30 @@ function initiative(message, npcs){
         message.pin();
     });
 }
+
+//Rolls initiative for all PCs and any requested NPCs
+function getInitiativeRoll(npcs){
+    vals = [];
+    for(id in mapping){
+        var data = require('./pcs/' + mapping[id] + '.json');
+        vals.push({name: data.name, initiative: (getRoll('d20', false)[0] + data.initiative_bonus)});
+    }
+    //Check to see if any NPCs were specifed and roll for them if applicable
+    if(npcs){
+        npcs.forEach(function(npc){
+            params = npc.split(/\:/g);
+            if(params.length == 2 && Number.isInteger(params[1])){
+                params[1] = parseInt(params[1]);
+                vals.push({name: params[0], initiative: (getRoll('d20', false)[0] + params[1])});
+            }
+        });
+    }
+    vals.sort(function(a, b){
+        return b.initiative - a.initiative;
+    });
+    return vals
+}
+
 
 //Bot login
 client.login(auth.token);
