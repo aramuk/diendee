@@ -484,55 +484,60 @@ function genFlavorText(){
     }
 }
 
+function isPermitted(uid){
+    if(uid != 190515236434870272 && uid != 190355784859779073){
+    // if(uid != 190515236434870272){
+        return false;
+    }
+    return true;
+}
+
 //Update the HP values of the requested characters
 function hp(message, params){
-    if(message.author.id != 190515236434870272 && message.author.id != 190355784859779073){
-    // if(message.author.id != 190515236434870272){
+    //Check to see if the user is authorized to use the command
+    if(!isPermitted(message.author.id)){
         message.channel.send(genBasicEmbed('You are not authorized to use that command.'));
         return;
-    }
-
-    //Print the stats of all the specified characters
-    if(params.length >= 1){
-        //Get the amount to increment the hp by and check if its valid
-        var choice = params.shift().toLowerCase();
-        if(choice != 'max'){
-            choice = parseInt(choice);
-            if(isNaN(choice)){
-                message.channel.send('Please enter `max` or a number after hp.');
-                return;
-            }
-        }
-        //If no character was specified, update the sender's character's hp
-        var pcs = [];
-        if(params.length == 0){
-            var mapping = require('./mapping.json');
-            pcs.push(mapping['u' + message.author.id]);
-        }
-        //Otherwise update the hp of the specified characters.
-        else{
-            pcs = params
-        }
-
-        //Edit the hp for each requested pc
-        pcs.forEach(function(pc){
-            var path = './pcs/' + pc + '.json';
-            
-            //Make sure the suggested pc exists
-            try{
-                data = require(path);
-                editHP(data, path, choice);
-            }
-            catch(err){
-                message.channel.send('Sorry, I could not find ' + pc + '.');
-            }
-        });
-        message.channel.send('HPs updated for: ' + pcs);
-    }
-    //If there was no statistic specified
-    else{
+    }; 
+    //Check if all parameters were specified
+    if(params.length < 1){
         message.channel.send('You must specify a character and a value.');
+        return;
     }
+    //Get the amount to increment the hp by and check if its valid
+    var choice = params.shift().toLowerCase();
+    if(choice != 'max'){
+        choice = parseInt(choice);
+        if(isNaN(choice)){
+            message.channel.send('Please enter `max` or a number after hp.');
+            return;
+        }
+    }
+    //If no character was specified, update the sender's character's hp
+    var pcs = [];
+    if(params.length == 0){
+        var mapping = require('./mapping.json');
+        pcs.push(mapping['u' + message.author.id]);
+    }
+    //Otherwise update the hp of the specified characters.
+    else{
+        pcs = params
+    }
+
+    //Edit the hp for each requested pc
+    pcs.forEach(function(pc){
+        var path = './pcs/' + pc + '.json';
+        
+        //Make sure the suggested pc exists
+        try{
+            data = require(path);
+            editHP(data, path, choice);
+        }
+        catch(err){
+            message.channel.send('Sorry, I could not find ' + pc + '.');
+        }
+    });
+    message.channel.send('HPs updated for: ' + pcs);
 }
 
 //Edits the HP of the requested characters
