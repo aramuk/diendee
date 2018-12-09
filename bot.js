@@ -511,13 +511,13 @@ function hp(message, params){
         }
         //Otherwise update the hp of the specified characters.
         else{
-            pcs = pcs.concat(params);
+            pcs = params
         }
 
         //Edit the hp for each requested pc
         pcs.forEach(function(pc){
             var path = './pcs/' + pc + '.json';
-            var data = {}
+            
             //Make sure the suggested pc exists
             try{
                 data = require(path);
@@ -564,18 +564,13 @@ function removePinnedMessages(message, start_text){
 
 function initiative(message, npcs){
     const message_text = 'Here are the initiative values: ';
-
-    //Remove old pinned initiative values
-    removePinnedMessages(message, message_text);
-
-    //Generate initiative values
-    vals = getInitiativeRoll(npcs);
-
+    removePinnedMessages(message, message_text);//Remove old pinned initiative values
+    vals = getInitiativeRoll(npcs);//Generate initiative values
+    //Format initiative rolls
     output = '';
     vals.forEach(function(elem){
         output += '**' + elem.name + '**: ' + elem.initiative + '\n';
     });
-
     //Send the initiative values to the channel and pin them
     message.channel.send(genBasicEmbed(`${message_text}\n${output}`)).then(function(message){
         message.pin();
