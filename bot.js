@@ -405,7 +405,7 @@ function printBio(character, message){
             //Character portrait
             .setThumbnail('attachment://image.png')
             //Print character Stats
-            .setDescription(`**Available XP**: ${data.xp.available} · **Total XP**:${data.xp.total}`)
+            .setDescription(`**Available XP**: ${data.xp.available} · **Total XP**: ${data.xp.total}`)
             //Print characteristics and statistics
             .addField('**Characteristics**', formatHash(data.characteristics), true)
             .addField('**Statistics**', formatHash(stats), true)
@@ -593,7 +593,7 @@ function getInitiativeRoll(npcs){
     if(npcs){
         npcs.forEach(function(npc){
             params = npc.split(/\:/g);
-            if(params.length == 2 && Number.isInteger(params[1])){
+            if(params.length == 2 && !isNaN(params[1])){
                 params[1] = parseInt(params[1]);
                 vals.push({name: params[0], initiative: (getRoll('d20', false)[0] + params[1])});
             }
