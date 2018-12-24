@@ -68,6 +68,15 @@ function helloThere(message){
     message.channel.send('General Kenobi!\nYou are a bold one.\nhttps://www.youtube.com/watch?v=frszEJb0aOo');
 }
 
+//Checks if a Discord user is permitted to use the command
+function isPermitted(uid){
+    if(uid != 190515236434870272 && uid != 190355784859779073){
+    // if(uid != 190515236434870272){
+        return false;
+    }
+    return true;
+}
+
 //Create a basic embed format for Diendee
 function genBasicEmbed(text){
     let embed = new Discord.RichEmbed()
@@ -78,6 +87,18 @@ function genBasicEmbed(text){
         embed.setDescription(text);
     }
     return embed
+}
+
+//Remove all pinned messages sent by Diendee that start with the specified text
+function removePinnedMessages(message, start_text){
+    message.channel.fetchPinnedMessages().then(function(messages){
+        messages = messages.array();
+        messages.forEach(function(mes){
+            if(mes.author.id == client.user.id && mes.embeds[0].description.substring(0,start_text.length) == start_text){
+                mes.unpin();
+            }
+        });
+    });
 }
 
 //Rolls the dice specified, and prints the result.
@@ -202,7 +223,11 @@ function about(message){
 
 //Print information about using Diendee
 function usage(message){
-    let embed = genBasicEmbed("Here are some ways you can talk to me:")
+    const message_text = 'Here are some ways you can talk to me:';
+    //Remove old usage commands
+    removePinnedMessages(message, message_text);
+    //All the usage commands
+    let embed = genBasicEmbed(message_text)
         .addField(`${auth.prefix}about`, "Learn about me")
         .addField(`${auth.prefix}usage`, "Learn how to talk to me")
         .addField(`${auth.prefix}roll [roll1 ...] --drop`, 
@@ -211,9 +236,11 @@ function usage(message){
         .addField(`${auth.prefix}bio [name1 ...]`, "I'll to look up some bios. I'll look up yours if you don't specify character(s).")
         .addField(`${auth.prefix}readbio [name1 ...]`, "I'll send you some adventurer(s)'s complete life story. I'll send your own if you don't specify character(s).")
         .addField(`${auth.prefix}get [stat] [name1 ...]`, "I'll tell you the proficiencies for a given stat. I'll look up yours if you don't specify character(s).")
-        .addField(`${auth.prefix}initiative [npc:modifier ...]`, "I'll roll initiative for you and pin it to the channel. I can roll NPCs too if you give me their name and initiative modifier.");
-
-    message.channel.send(embed);
+        .addField(`${auth.prefix}initiative [first_last:modifier ...]`, "I'll roll initiative for you and pin it to the channel. I can roll NPCs too if you give me their name and initiative modifier.");
+    //Pin usage commands to the channel
+    message.channel.send(embed).then(function(message){
+        message.pin();
+    });
 }
 
 //Print the requested stats
@@ -484,14 +511,6 @@ function genFlavorText(){
     }
 }
 
-function isPermitted(uid){
-    if(uid != 190515236434870272 && uid != 190355784859779073){
-    // if(uid != 190515236434870272){
-        return false;
-    }
-    return true;
-}
-
 //Update the HP values of the requested characters
 function hp(message, params){
     //Check to see if the user is authorized to use the command
@@ -555,18 +574,6 @@ function editHP(data, path, value){
     });
 }
 
-//Remove all pinned messages sent by Diendee that start with the specified text
-function removePinnedMessages(message, start_text){
-    message.channel.fetchPinnedMessages().then(function(messages){
-        messages = messages.array();
-        messages.forEach(function(mes){
-            if(mes.author.id == client.user.id && mes.embeds[0].description.substring(0,start_text.length) == start_text){
-                mes.unpin();
-            }
-        });
-    });
-}
-
 function initiative(message, npcs){
     const message_text = 'Here are the initiative values: ';
     removePinnedMessages(message, message_text);//Remove old pinned initiative values
@@ -592,7 +599,7 @@ function getInitiativeRoll(npcs){
     //Check to see if any NPCs were specifed and roll for them if applicable
     if(npcs){
         npcs.forEach(function(npc){
-            params = npc.split(/\:/g);
+            params = npc.replace('_', ' ').split(/\:/g);
             if(params.length == 2 && !isNaN(params[1])){
                 params[1] = parseInt(params[1]);
                 vals.push({name: params[0], initiative: (getRoll('d20', false)[0] + params[1])});
