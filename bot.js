@@ -57,8 +57,10 @@ client.on("message", function(message){
             case 'hp':
                 hp(message, args);
                 break;
+            //$initiative
             case 'initiative':
-                initiative(message, args)
+                initiative(message, args);
+                break;
         }
     }
 });
@@ -70,11 +72,8 @@ function helloThere(message){
 
 //Checks if a Discord user is permitted to use the command
 function isPermitted(uid){
-    if(uid != 190515236434870272 && uid != 190355784859779073){
-    // if(uid != 190515236434870272){
-        return false;
-    }
-    return true;
+    return (uid == 190515236434870272 || uid == 190355784859779073);
+    // return uid != 190515236434870272
 }
 
 //Create a basic embed format for Diendee
@@ -86,7 +85,7 @@ function genBasicEmbed(text){
     if(text){
         embed.setDescription(text);
     }
-    return embed
+    return embed;
 }
 
 //Remove all pinned messages sent by Diendee that start with the specified text
