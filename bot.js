@@ -523,54 +523,67 @@ function hp(message, params){
         return;
     }
     //Get the amount to increment the hp by and check if its valid
-    var choice = params.shift().toLowerCase();
-    if(choice != 'max'){
-        choice = parseInt(choice);
-        if(isNaN(choice)){
-            message.channel.send('Please enter `max` or a number after hp.');
-            return;
-        }
-    }
-    //If no character was specified, update the sender's character's hp
+    var errors = [];
     var pcs = [];
-    if(params.length == 0){
-        var mapping = require('./mapping.json');
-        pcs.push(mapping['u' + message.author.id]);
-    }
-    //Otherwise update the hp of the specified characters.
-    else{
-        pcs = params
-    }
-
-    //Edit the hp for each requested pc
-    pcs.forEach(function(pc){
-        var path = './pcs/' + pc + '.json';
-        
-        //Make sure the suggested pc exists
-        try{
-            data = require(path);
-            editHP(data, path, choice);
+    params.forEach(function(param){
+        var cmd = param.split(/\:/g);
+        var val = parseInt(cmd[1]);
+        //Check to see if the hp command is valid, before trying to update
+        if(cmd[1] == 'max' || !isNaN(val)){
+            if(cmd[1] == 'max'){
+                val = cmd[1];
+            }
+            var path = './pcs/' + cmd[0].toLowerCase() + '.json';
+            //Edit the HP and record whether it works
+            var success = editHP(path, val);
+            if(success){
+                pcs.push(cmd[0]);
+            }
+            else{
+                errors.push(cmd[0]);
+            }
         }
-        catch(err){
-            message.channel.send('Sorry, I could not find ' + pc + '.');
+        else{
+            errors.push(cmd[0]);
         }
     });
-    message.channel.send('HPs updated for: ' + pcs);
+
+    //Confirm HP update
+    var description = 'I updated the HP values for: ' + pcs;
+    if(errors.length > 0){
+        description += '\nI ran into some trouble updating HP for ' + errors;
+    }
+    message.channel.send(genBasicEmbed(description));
 }
 
 //Edits the HP of the requested characters
-function editHP(data, path, value){
-    if(value == 'max'){
+function editHP(path, value){
+    //Load PC data if possible
+    try{
+        data = require(path);
+    }
+    catch(err){
+        return false;
+    }
+    //Update the HP to the appropriate value
+    if(value == 'max' || data.hp.current + value > data.hp.max){
         data.hp.current = data.hp.max;
     }
     else{
         data.hp.current += value;
+        if(data.hp.current < 0){
+            data.hp.current = 0;
+        }
     }
+
+    //Write the updated data to the file
     fs.writeJSON(path, data, function(err){
         if(err){
             console.log("Error: ", err);
+            return false;
         }
     });
+    return true;
 }
 
 function initiative(message, npcs){
@@ -605,6 +618,7 @@ function getInitiativeRoll(npcs){
             }
         });
     }
+    //Sort the initiative values least to greatest
     vals.sort(function(a, b){
         return b.initiative - a.initiative;
     });
