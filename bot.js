@@ -12,7 +12,7 @@ client.on("ready", function(){
     console.log("I am ready!");
 });
 
-
+//Listen for bot commands
 client.on("message", function(message){
     if (message.author.bot) return;
     if (message.content.substring(0, 1) == auth.prefix) {
@@ -229,13 +229,13 @@ function usage(message){
     let embed = genBasicEmbed(message_text)
         .addField(`${auth.prefix}about`, "Learn about me")
         .addField(`${auth.prefix}usage`, "Learn how to talk to me")
-        .addField(`${auth.prefix}roll [roll1 ...] --drop`, 
+        .addField(`${auth.prefix}roll (dice{+dice...})+ -drop`, 
             "I'll roll the specified roll.\nRolls can be specifed as `2d6+d8+2d20+5+5`.\nYou can specify multiple rolls, just seperate them with a space like so: `d20 2d6+5`.\n`--drop` is optional, but if you add it I will drop the lowest roll.")
-        .addField(`${auth.prefix}stats [name1 ...]`, "I'll look up some stats for you. I'll look up yours if you don't specify character(s).")
-        .addField(`${auth.prefix}bio [name1 ...]`, "I'll to look up some bios. I'll look up yours if you don't specify character(s).")
-        .addField(`${auth.prefix}readbio [name1 ...]`, "I'll send you some adventurer(s)'s complete life story. I'll send your own if you don't specify character(s).")
-        .addField(`${auth.prefix}get [stat] [name1 ...]`, "I'll tell you the proficiencies for a given stat. I'll look up yours if you don't specify character(s).")
-        .addField(`${auth.prefix}initiative [first_last:modifier ...]`, "I'll roll initiative for you and pin it to the channel. I can roll NPCs too if you give me their name and initiative modifier.");
+        .addField(`${auth.prefix}stats {name ...}`, "I'll look up some stats for you. I'll look up yours if you don't specify character(s).")
+        .addField(`${auth.prefix}bio {name1 ...}`, "I'll to look up some bios. I'll look up yours if you don't specify character(s).")
+        .addField(`${auth.prefix}readbio {name1 ...}`, "I'll send you some adventurer(s)'s complete life story. I'll send your own if you don't specify character(s).")
+        .addField(`${auth.prefix}get (stat) {name1 ...}`, "I'll tell you the proficiencies for a given stat. I'll look up yours if you don't specify character(s).")
+        .addField(`${auth.prefix}initiative {first_last:modifier ...}`, "I'll roll initiative for you and pin it to the channel. I can roll NPCs too if you give me their name and initiative modifier.");
     //Pin usage commands to the channel
     message.channel.send(embed).then(function(message){
         message.pin();
@@ -586,6 +586,7 @@ function editHP(path, value){
     return true;
 }
 
+//Roll for initiative and pin results to channel
 function initiative(message, npcs){
     const message_text = 'Here are the initiative values: ';
     removePinnedMessages(message, message_text);//Remove old pinned initiative values
