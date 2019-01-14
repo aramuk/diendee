@@ -100,6 +100,15 @@ function removePinnedMessages(message, start_text){
     });
 }
 
+//Converts a string to a Natural number; Returns 1 if there's an error
+function parseNat(val){
+    val = parseInt(val);
+    if(!isNaN(val) && val > 0){
+        return val;
+    }
+    return 1;
+}
+
 //Rolls the dice specified, and prints the result.
 function roll(message, args){
     //Exit early if no dice specified.
@@ -174,14 +183,14 @@ function getRoll(cmd, drop){
         return [parseInt(cmd)];
     }
 
-    //Find the type of die to roll
-    die = parseInt(cmd.substring(dIndex + 1));
-
     //Find the number of die to roll
     quantity = 1;
     if(dIndex > 0){
-        quantity = parseInt(cmd.substring(0, dIndex));
+        val = parseNat(cmd.substring(0, dIndex));
     }
+
+    //Find the type of die to roll
+    die = parseNat(cmd.substring(dIndex + 1));
 
     //Roll the dice and record the results.
     rolls = [];
