@@ -114,6 +114,7 @@ function roll(message, args){
         message.channel.send('Please specify die/dice to roll.');
         return;
     }
+    var send = false;
     let embed = new Discord.RichEmbed()
             //Set thumbnail to Diendee's profile pic
             .setThumbnail(client.user.displayAvatarURL)
@@ -146,7 +147,9 @@ function roll(message, args){
             embed.addField(`**${arg}**`, formatRolls(rolls) + `**Total: ${total}**\n`, true);
         }
     });
-    message.channel.send(embed);
+    if(send){
+        message.channel.send(embed);
+    }
 }
 
 //Rolls {dice}, each with {sides}
@@ -200,8 +203,8 @@ function usage(message){
     let embed = genBasicEmbed(message_text)
         .addField(`${auth.prefix}about`, "Learn about me")
         .addField(`${auth.prefix}usage`, "Learn how to talk to me")
-        .addField(`${auth.prefix}roll (dice{+dice...})+ -drop`, 
-            "I'll roll the specified roll.\nRolls can be specifed as `2d6+d8+2d20+5+5`.\nYou can specify multiple rolls, just seperate them with a space like so: `d20 2d6+5`.\n`--drop` is optional, but if you add it I will drop the lowest roll.")
+        .addField(`${auth.prefix}roll (dice{+dice...})+ [--drop]`, 
+            "I'll roll the specified roll.\nRolls can be specifed as `2d6+d8+2d20`.\nYou can specify multiple rolls, just seperate them with a space like so: `d20 2d6+5`.\n`--drop` is optional, but if you add it I will drop the lowest roll.")
         .addField(`${auth.prefix}stats {name ...}`, "I'll look up some stats for you. I'll look up yours if you don't specify character(s).")
         .addField(`${auth.prefix}bio {name1 ...}`, "I'll to look up some bios. I'll look up yours if you don't specify character(s).")
         .addField(`${auth.prefix}readbio {name1 ...}`, "I'll send you some adventurer(s)'s complete life story. I'll send your own if you don't specify character(s).")
@@ -578,7 +581,7 @@ function getInitiativeRoll(npcs){
     vals = [];
     for(id in mapping){
         var data = require('./pcs/' + mapping[id] + '.json');
-        vals.push({name: data.name, initiative: (getRoll('d20', false)[0] + data.initiative_bonus)});
+        vals.push({name: data.name, initiative: rollDice(1,20).total + data.initiative_bonus});
     }
     //Check to see if any NPCs were specifed and roll for them if applicable
     if(npcs){
@@ -586,7 +589,7 @@ function getInitiativeRoll(npcs){
             params = npc.replace('_', ' ').split(/\:/g);
             if(params.length == 2 && !isNaN(params[1])){
                 params[1] = parseInt(params[1]);
-                vals.push({name: params[0], initiative: (getRoll('d20', false)[0] + params[1])});
+                vals.push({name: params[0], initiative: rollDice(1,20).total + params[1]});
             }
         });
     }
