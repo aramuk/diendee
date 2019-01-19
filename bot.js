@@ -109,8 +109,38 @@ function parseNat(val){
     return 1;
 }
 
-//Rolls the dice specified, and prints the result.
 function roll(message, args){
+    if(args.length < 1){
+        message.channel.send('Please specify die/dice to roll.');
+        return;
+    }
+    output = [];
+    /*Known bugs:
+        3d-1, returns -1
+        bugs out on odd indexed arguments
+    */
+    const RE = /^(\d*)d?(\d+)$/;
+    args.forEach(function(arg){
+        arg.split('+').forEach(function(inp){
+            cmds = RE.exec(inp);
+            console.log('['+inp+']', cmds);
+            if(!cmds){
+                message.channel.send(genBasicEmbed('Please enter a valid roll command.\nUse `$usage` if you need help writing a command.'));
+                return;
+            }
+        });
+        // cmds.forEach(function(cmd){
+        //     console.log(cmd)
+        // });
+    });
+}
+
+function rollDice(quantity, dice,){
+
+}
+
+//Rolls the dice specified, and prints the result.
+function roll1(message, args){
     //Exit early if no dice specified.
     if(args.length < 1){
         message.channel.send('Please specify die/dice to roll');
@@ -137,13 +167,16 @@ function roll(message, args){
 }
 
 //Returns requested rolls as a list of hashes representing fields
-function getRollOutput(cmds){
-    //Check to see if we should drop the lowest roll
-    var drop = false;
-    if(cmds[cmds.length - 1] == '--drop'){
-        drop = true;
-        cmds.splice(cmds.length - 1, 1);
-    }
+function getRollOutput(cmd){
+    // //Check to see if we should drop the lowest roll
+    // var drop = false;
+    // if(cmds[cmds.length - 1] == '--drop'){
+    //     drop = true;
+    //     cmds.splice(cmds.length - 1, 1);
+    // }
+    // if(cmds[cmds.length - 1]=='--adv'){
+
+    // }
     //Get the roll corresponding to each command and add it to a list
     fields = [];
     //Run through all sets of commands
@@ -176,7 +209,7 @@ function getRollOutput(cmds){
 }
 
 //Returns the an array of rolls for a given command
-function getRoll(cmd, drop){
+function getRoll(cmd){
     //If the command specifies a constant, return it.
     dIndex = cmd.indexOf('d');
     if(dIndex == -1){
