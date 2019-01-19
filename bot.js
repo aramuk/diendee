@@ -114,31 +114,60 @@ function roll(message, args){
         message.channel.send('Please specify die/dice to roll.');
         return;
     }
-    output = [];
+    let embed = new Discord.RichEmbed()
+            //Set thumbnail to Diendee's profile pic
+            .setThumbnail(client.user.displayAvatarURL)
+            //Set author to the person who requested the roll
+            .setAuthor(message.author.username + ' rolled: ', message.author.displayAvatarURL)
+            .setColor('#fcce63');
     /*Known bugs:
-        3d-1, returns -1
-        bugs out on odd indexed arguments
+        20, results in a roll of 2 and 0
     */
     const RE = /^(\d*)d?(\d+)$/;
     args.forEach(function(arg){
+        var rolls = [];
+        //Parse the roll commands and roll them
         arg.split('+').forEach(function(inp){
             cmds = RE.exec(inp);
-            console.log('['+inp+']', cmds);
+            // console.log('['+inp+']', cmds);
             if(!cmds){
                 message.channel.send('Could not roll: ' + inp);
-                return;
             }
-            console.log('rolling', parseNat(cmds[0]));
-            console.log('dice:', parseNat(cmds[1]), 'sides:', parseNat(cmds[2]));
+            else{
+                rolls.push({'cmd': cmds[0], 'result': rollDice(parseNat(cmds[1]), parseNat(cmds[2]))});
+            }
         });
-        // cmds.forEach(function(cmd){
-        //     console.log(cmd)
-        // });
+        //Print the results
+        if(rolls.length > 0){
+            var total = 0;
+            rolls.forEach(function(roll){
+                total += roll.result.total;
+            });
+            embed.addField(`**${arg}**`, formatRolls(rolls) + `**Total: ${total}**\n`, true);
+        }
     });
+    message.channel.send(embed);
 }
 
+//Rolls {dice}, each with {sides}
 function rollDice(dice, sides){
+    var rolls = [];
+    for(d = 0; d < dice; d++){
+        rolls.push(Math.floor(Math.random() * sides) + 1);
+    }
+    function add(a, b) {
+        return a + b;
+    }
+    return {'total': rolls.reduce(add, 0), 'rolls': rolls};
+}
 
+//Turns a JSON of roll results into a string
+function formatRolls(rolls){
+    output = ''
+    rolls.forEach(function(roll){
+        output += `**${roll.cmd}:** ${roll.result.total} _(${roll.result.rolls.join(', ')})_\n`
+    });
+    return output
 }
 
 //Rolls the dice specified, and prints the result.
