@@ -125,9 +125,11 @@ function roll(message, args){
             cmds = RE.exec(inp);
             console.log('['+inp+']', cmds);
             if(!cmds){
-                message.channel.send(genBasicEmbed('Please enter a valid roll command.\nUse `$usage` if you need help writing a command.'));
+                message.channel.send('Could not roll: ' + inp);
                 return;
             }
+            console.log('rolling', parseNat(cmds[0]));
+            console.log('dice:', parseNat(cmds[1]), 'sides:', parseNat(cmds[2]));
         });
         // cmds.forEach(function(cmd){
         //     console.log(cmd)
@@ -135,7 +137,7 @@ function roll(message, args){
     });
 }
 
-function rollDice(quantity, dice,){
+function rollDice(dice, sides){
 
 }
 
