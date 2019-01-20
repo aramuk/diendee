@@ -312,7 +312,7 @@ function get(message, params){
         if(params.length == 0){
             params = [mapping['u' + message.author.id]];
         }
-        getRequestedSkill(choice, params, message).then(function(values){
+        getRequestedSkill(choice, params).then(function(values){
             // Print all the requested stat values
             if(values.length > 0){
                 var output = ''
@@ -336,7 +336,7 @@ function get(message, params){
 }
 
 //Gets the proficiency values for some characters in a particular skill
-async function getRequestedSkill(skill, characters, message){
+async function getRequestedSkill(skill, characters){
     //Make sure stat is valid before proceeding
     var stat = ''
     for(key in skills){
