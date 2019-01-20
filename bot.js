@@ -262,21 +262,19 @@ function printStats(character, message){
             var vals = {}
             //Get the values for each proficiency within the main stat
             skills[key].forEach(function(skill){
-                if(data.stats[key][1][skill]){
-                    vals[skill] = data.stats[key][1][skill];
-                }
-                else{
-                    vals[skill] = Math.floor((data.stats[key][0] - 10)/2);
+                vals[skill] = Math.floor((data.stats[key].value - 10)/2);
+                if(data.stats[key].proficiencies.hasOwnProperty(skill)){
+                    vals[skill] += (data.stats[key].proficiencies[skill] ? data.proficiency_bonus * 2 : data.proficiency_bonus);
                 }
             });
 
             //Constitution has no associated skills
             if(key == "Constitution"){
-                embed.addField(`**${key}: ${data.stats[key][0]}**`, "_None_", true);
+                embed.addField(`**${key}: ${data.stats[key].value}**`, "_None_", true);
             }
             else{
                 //Add formatted values to the embed to be outputted
-                embed.addField(`**${key}: ${data.stats[key][0]}**`, formatHash(vals), true);
+                embed.addField(`**${key}: ${data.stats[key].value}**`, formatHash(vals), true);
             }
         }
         //Send values to the channel
