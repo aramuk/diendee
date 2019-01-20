@@ -145,11 +145,11 @@ function roll(message, args){
     }
     var send = false;
     let embed = new Discord.RichEmbed()
-            //Set thumbnail to Diendee's profile pic
-            .setThumbnail(client.user.displayAvatarURL)
-            //Set author to the person who requested the roll
-            .setAuthor(message.author.username + ' rolled: ', message.author.displayAvatarURL)
-            .setColor('#fcce63');
+        //Set thumbnail to Diendee's profile pic
+        .setThumbnail(client.user.displayAvatarURL)
+        //Set author to the person who requested the roll
+        .setAuthor(message.author.username + ' rolled: ', message.author.displayAvatarURL)
+        .setColor('#fcce63');
     /*Known bugs:
         20, results in a roll of 2 and 0
     */
@@ -232,7 +232,7 @@ function usage(message){
     let embed = genBasicEmbed(message_text)
         .addField(`${auth.prefix}about`, "Learn about me")
         .addField(`${auth.prefix}usage`, "Learn how to talk to me")
-        .addField(`${auth.prefix}roll (dice{+dice...})+ [--drop]`, 
+        .addField(`${auth.prefix}roll (dice{+dice...})+ [--drop]`,
             "I'll roll the specified roll.\nRolls can be specifed as `2d6+d8+2d20`.\nYou can specify multiple rolls, just seperate them with a space like so: `d20 2d6+5`.\n`--drop` is optional, but if you add it I will drop the lowest roll.")
         .addField(`${auth.prefix}stats {name ...}`, "I'll look up some stats for you. I'll look up yours if you don't specify character(s).")
         .addField(`${auth.prefix}bio {name1 ...}`, "I'll to look up some bios. I'll look up yours if you don't specify character(s).")
@@ -417,12 +417,12 @@ function printBio(character, message){
 function readbio(message, characters){
     //Format and print some flavor text
     message.author.send(genBasicEmbed(`${genFlavorText()}`))
-    
+
     //Print the bio of each of the specified character's
     if(characters.length > 0){
         for(j = 0; j < characters.length; j++){
             sendFullBio(characters[j], message);
-        }   
+        }
     }
     //If no character was specified, print the sender's character's bio
     else{
@@ -481,7 +481,7 @@ async function hp(message, params){
     if(!isPermitted(message.author.id)){
         message.channel.send(genBasicEmbed('You are not authorized to use that command.'));
         return;
-    }; 
+    };
     //Check if all parameters were specified
     if(params.length < 1){
         message.channel.send('You must specify character(s) and a value.');
@@ -561,7 +561,7 @@ async function xp(message, params){
     if(!isPermitted(message.author.id)){
         message.channel.send(genBasicEmbed('You are not authorized to use that command.'));
         return;
-    }; 
+    };
     //Check if all parameters were specified
     if(params.length < 1){
         message.channel.send('You must specify character(s) and a value.');
@@ -619,7 +619,7 @@ function editXP(path, value){
             data.xp.next = levels[data.level+1].xp - data.xp.total;
             data.proficiency_bonus = levels[data.level].prof;
             data.hp.hit_dice = data.level;
-    
+
             //Write the updated data to the file
             fs.writeFile(path,  JSON.stringify(data, null, 4), function(err){
                 if(err){
