@@ -1,7 +1,6 @@
 const Discord = require("discord.js");
 const fs = require('fs-extra');
 const auth = require('./auth.json');
-const async = require('async');
 
 //D&D Data
 const mapping = require('./data/mapping.json');
@@ -381,15 +380,11 @@ function bio(message, characters){
 
 //Prints the bio of a specified chracter
 function printBio(character, message){
-    //Try-catch to make sure the character actually exists, with complete data
-    try{
-        //Read character data from a file
-        var data = require('./pcs/' + character + '.json');
+    loadData('./pcs/' + character + '.json').then(function(data){
         var acct = client.users.get(data.player)
-
         var stats = {}
         for(key in data.stats){
-            stats[key] = data.stats[key][0];
+            stats[key] = data.stats[key].value;
         }
 
         let embed = new Discord.RichEmbed()
@@ -409,10 +404,10 @@ function printBio(character, message){
             .setColor(data.color);
 
         message.channel.send({embed, files: [{ attachment: data.icon, name: 'image.png' }]});
-    }catch(e){
+    }).catch(function(e){
         message.channel.send(`${character} isn't here.`);
         console.log(e);
-    }
+    });
 }
 
 //Dms the bio of the specified characters to the requester
@@ -526,71 +521,75 @@ function hp(message, params){
 //Edits the HP of the requested characters
 function editHP(path, value){
     //Load PC data if possible
-    try{
-        data = require(path);
-    }
-    catch(err){
-        return false;
-    }
-    //Update the HP to the appropriate value
-    if(value == 'max' || data.hp.current + value > data.hp.max){
-        data.hp.current = data.hp.max;
-    }
-    else{
-        data.hp.current += value;
-        if(data.hp.current < 0){
-            data.hp.current = 0;
+    loadData(path).then(function(data){
+        //Update the HP to the appropriate value
+        if(value == 'max' || data.hp.current + value > data.hp.max){
+            data.hp.current = data.hp.max;
         }
-    }
+        else{
+            data.hp.current += value;
+            if(data.hp.current < 0){
+                data.hp.current = 0;
+            }
+        }
 
-    //Write the updated data to the file
-    fs.writeJSON(path, data, function(err){
-        if(err){
-            console.log("Error: ", err);
-            return false;
-        }
+        //Write the updated data to the file
+        fs.writeJSON(path, data, function(err){
+            if(err){
+                console.log("Error: ", err);
+                return false;
+            }
+        });
+        return true;
+    }).catch(function(err){
+        console.log('Error editing hp', err);
+        return false;
     });
-    return true;
 }
 
 //Roll for initiative and pin results to channel
 function initiative(message, npcs){
     const message_text = 'Here are the initiative values: ';
     removePinnedMessages(message, message_text);//Remove old pinned initiative values
-    vals = getInitiativeRoll(npcs);//Generate initiative values
-    //Format initiative rolls
-    output = '';
-    vals.forEach(function(elem){
-        output += '**' + elem.name + '**: ' + elem.initiative + '\n';
-    });
-    //Send the initiative values to the channel and pin them
-    message.channel.send(genBasicEmbed(`${message_text}\n${output}`)).then(function(message){
-        message.pin();
+    getInitiativeRoll(npcs).then(function(vals){//Generate initiative values
+        //Format initiative rolls
+        output = '';
+        vals.forEach(function(elem){
+            output += '**' + elem.name + '**: ' + elem.initiative + '\n';
+        });
+        //Send the initiative values to the channel and pin them
+        message.channel.send(genBasicEmbed(`${message_text}\n${output}`)).then(function(message){
+            message.pin();
+        });
     });
 }
 
 //Rolls initiative for all PCs and any requested NPCs
-function getInitiativeRoll(npcs){
-    vals = [];
-    for(id in mapping){
-        var data = require('./pcs/' + mapping[id] + '.json');
-        vals.push({name: data.name, initiative: rollDice(1,20).total + data.initiative_bonus});
+async function getInitiativeRoll(npcs){
+    var pcs = [];
+    for(key in mapping){
+        pcs.push(mapping[key]);
     }
+    promises = pcs.map(async pc => {
+        const data = await loadData('./pcs/' + pc + '.json');
+        return {name: data.name, initiative: rollDice(1,20).total + data.initiative_bonus};
+    });
+    const initiatives = await Promise.all(promises);
     //Check to see if any NPCs were specifed and roll for them if applicable
     if(npcs){
         npcs.forEach(function(npc){
             params = npc.replace('_', ' ').split(/\:/g);
             if(params.length == 2 && !isNaN(params[1])){
                 params[1] = parseInt(params[1]);
-                vals.push({name: params[0], initiative: rollDice(1,20).total + params[1]});
+                initiatives.push({name: params[0], initiative: rollDice(1,20).total + params[1]});
             }
         });
     }
     //Sort the initiative values least to greatest
-    vals.sort(function(a, b){
+    initiatives.sort(function(a, b){
         return b.initiative - a.initiative;
-    });
-    return vals
+    })
+    return initiatives;
 }
 
 
