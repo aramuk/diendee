@@ -549,7 +549,7 @@ function editHP(path, value){
 }
 
 //Update the XP values of the requested characters
-function xp(message, params){
+async function xp(message, params){
     //Check to see if the user is authorized to use the command
     if(!isPermitted(message.author.id)){
         message.channel.send(genBasicEmbed('You are not authorized to use that command.'));
@@ -560,67 +560,73 @@ function xp(message, params){
         message.channel.send('You must specify character(s) and a value.');
         return;
     }
-    var errors = [];
-    var pcs = [];
-    params.forEach(function(param){
+    // var errors = [];
+    // var pcs = [];
+    var results = params.map(async param => {
         var cmd = param.split(/\:/g);
         var val = parseInt(cmd[1]);
         //Check to see if the xp value is valid, before trying to update
         if(!isNaN(val)){
             var path = './pcs/' + cmd[0].toLowerCase() + '.json';
-            //Edit the XP and record whether it works
-            var success = editXP(path, val);
-            console.log(success);
-            if(success){
-                pcs.push(cmd[0]);
-            }
-            else{
-                errors.push(cmd[0]);
-            }
+            return {'pc': cmd[0], 'success': await editXP(path, val)};
         }
         else{
-            errors.push(cmd[0]);
+            return {'pc': cmd[0], 'success': false};
         }
     });
-
+    const pcs = await Promise.all(results);
+    var success = []
+    var errors = [];
+    pcs.forEach(function(pc){
+        if(pc.success){
+            success.push(pc.pc);
+        }
+        else{
+            errors.push(pc.pc);
+        }
+    });
     //Confirm XP update
-    // var description = 'I updated the XP values for: ' + pcs;
-    // if(errors.length > 0){
-    //     description += '\nI ran into some trouble updating XP for ' + errors;
-    // }
-    // message.channel.send(genBasicEmbed(description));
+    var description = 'I updated the XP values for: ' + success;
+    if(errors.length > 0){
+        description += '\nI ran into some trouble updating XP for ' + errors;
+    }
+    message.channel.send(genBasicEmbed(description));
 }
 
 //Edits the XP of the requested characters
 function editXP(path, value){
     //Load PC data if possible
-    loadData(path).then(function(data){
-        //Update the XP to the appropriate value; Change values if level up occurs
-        /* Known bugs
-            Can only gain 1 level at a time
-        */
-        data.xp.total += value;
-        if(data.xp.total > levels[data.level + 1].xp){
-            data.level += 1;
-        }
-        else if(data.xp.total < levels[data.level].xp){
-            data.level -= 1;
-        }
-        data.xp.next = levels[data.level+1].xp - data.xp.total;
-        data.proficiency_bonus = levels[data.level].prof;
-        data.hp.hit_dice = data.level;
-
-        //Write the updated data to the file
-        fs.writeFile(path,  JSON.stringify(data, null, 4), function(err){
-            if(err){
-                console.log("Error: ", err);
-                return false;
+    return new Promise(function(resolve, reject){
+        loadData(path).then(function(data){
+            //Update the XP to the appropriate value; Change values if level up occurs
+            /* Known bugs
+                Can only gain 1 level at a time
+            */
+            data.xp.total += value;
+            if(data.xp.total > levels[data.level + 1].xp){
+                data.level += 1;
             }
+            else if(data.xp.total < levels[data.level].xp){
+                data.level -= 1;
+            }
+            data.xp.next = levels[data.level+1].xp - data.xp.total;
+            data.proficiency_bonus = levels[data.level].prof;
+            data.hp.hit_dice = data.level;
+    
+            //Write the updated data to the file
+            fs.writeFile(path,  JSON.stringify(data, null, 4), function(err){
+                if(err){
+                    console.log("Error writing JSON: ", err);
+                    resolve(false);
+                }
+                else{
+                    resolve(true);
+                }
+            });
+        }).catch(function(err){
+            console.log('Error editing xp', err);
+            resolve(false);
         });
-        return true;
-    }).catch(function(err){
-        console.log('Error editing xp', err);
-        return false;
     });
 }
 
