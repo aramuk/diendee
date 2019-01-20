@@ -476,7 +476,7 @@ function genFlavorText(){
 }
 
 //Update the HP values of the requested characters
-function hp(message, params){
+async function hp(message, params){
     //Check to see if the user is authorized to use the command
     if(!isPermitted(message.author.id)){
         message.channel.send(genBasicEmbed('You are not authorized to use that command.'));
@@ -488,9 +488,7 @@ function hp(message, params){
         return;
     }
     //Get the amount to increment the hp by and check if its valid
-    var errors = [];
-    var pcs = [];
-    params.forEach(function(param){
+    const results = params.map(async param =>{
         var cmd = param.split(/\:/g);
         var val = parseInt(cmd[1]);
         //Check to see if the hp command is valid, before trying to update
@@ -500,51 +498,60 @@ function hp(message, params){
             }
             var path = './pcs/' + cmd[0].toLowerCase() + '.json';
             //Edit the HP and record whether it works
-            var success = editHP(path, val);
-            if(success){
-                pcs.push(cmd[0]);
-            }
-            else{
-                errors.push(cmd[0]);
-            }
+            return {'pc': cmd[0], 'success': await editHP(path, val)};
         }
         else{
-            errors.push(cmd[0]);
+            return {'pc': cmd[0], 'success': false};
+        }
+    });
+    const pcs = await Promise.all(results);
+    var success = []
+    var errors = [];
+    pcs.forEach(function(pc){
+        if(pc.success){
+            success.push(pc.pc);
+        }
+        else{
+            errors.push(pc.pc);
         }
     });
     //Confirm HP update
-    // var description = 'I updated the HP values for: ' + pcs;
-    // if(errors.length > 0){
-    //     description += '\nI ran into some trouble updating HP for ' + errors;
-    // }
-    // message.channel.send(genBasicEmbed(description));
+    var description = 'I updated HP for: ' + success;
+    if(errors.length > 0){
+        description += '\nI ran into some trouble updating HP for ' + errors;
+    }
+    message.channel.send(genBasicEmbed(description));
 }
 
 //Edits the HP of the requested characters
 function editHP(path, value){
     //Load PC data if possible
-    loadData(path).then(function(data){
-        //Update the HP to the appropriate value
-        if(value == 'max' || data.hp.current + value > data.hp.max){
-            data.hp.current = data.hp.max;
-        }
-        else{
-            data.hp.current += value;
-            if(data.hp.current < 0){
-                data.hp.current = 0;
+    return new Promise(function(resolve, reject){
+        loadData(path).then(function(data){
+            //Update the HP to the appropriate value
+            if(value == 'max' || data.hp.current + value > data.hp.max){
+                data.hp.current = data.hp.max;
             }
-        }
-        //Write the updated data to the file
-        fs.writeFile(path,  JSON.stringify(data, null, 4), function(err){
-            if(err){
-                console.log("Error: ", err);
-                return false;
+            else{
+                data.hp.current += value;
+                if(data.hp.current < 0){
+                    data.hp.current = 0;
+                }
             }
+            //Write the updated data to the file
+            fs.writeFile(path,  JSON.stringify(data, null, 4), function(err){
+                if(err){
+                    console.log("Error writing JSON: ", err);
+                    resolve(false);
+                }
+                else{
+                    resolve(true);
+                }
+            });
+        }).catch(function(err){
+            console.log('Error editing hp', err);
+            resolve(false);
         });
-        return true;
-    }).catch(function(err){
-        console.log('Error editing hp', err);
-        return false;
     });
 }
 
@@ -586,7 +593,7 @@ async function xp(message, params){
         }
     });
     //Confirm XP update
-    var description = 'I updated the XP values for: ' + success;
+    var description = 'I updated XP for: ' + success;
     if(errors.length > 0){
         description += '\nI ran into some trouble updating XP for ' + errors;
     }
