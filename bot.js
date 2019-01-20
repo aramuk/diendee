@@ -1,9 +1,11 @@
 const Discord = require("discord.js");
 const fs = require('fs-extra');
-var auth = require('./auth.json');
+const auth = require('./auth.json');
 
-//A mapping of userIDs to characters
-var mapping = require('./mapping.json');
+//D&D Data
+const mapping = require('./data/mapping.json');
+const skills = require('./data/skills.json');
+const levels = require('./data/levels.json');
 
 const client = new Discord.Client();
 
@@ -109,6 +111,21 @@ function parseNat(val){
     return 1;
 }
 
+//Loads a file from memory
+function loadData(path){
+    return new Promise(function(resolve, reject){
+        fs.readFile(path, 'utf-8', function(err, data){
+            if(err){
+                console.log("Error", err);
+                reject(err);
+            }
+            else{
+                resolve(JSON.parse(data));
+            }
+        });
+    });
+}
+
 function roll(message, args){
     if(args.length < 1){
         message.channel.send('Please specify die/dice to roll.');
@@ -187,7 +204,7 @@ function getMinIndex(rolls){
 //Print information about Diendee
 function about(message){
     var owner = client.users.get(auth.owner);
-    let embed = genBasicEmbed(`Greetings adventurer!\nMy name is Diendee and I will aid you on your journey.\n\nType ${auth.prefix}usage to learn how to talk to me!`)
+    let embed = genBasicEmbed('Greetings adventurer!\nMy name is Diendee and I will aid you on your journey.\n\nType `' + auth.prefix + 'usage` to learn how to talk to me!')
         //Add signature to the bot.
         .setFooter(`This bot was created by ${owner.username}`, owner.displayAvatarURL);
 
@@ -233,18 +250,13 @@ function stats(message, characters){
 
 //Prints the stats of the specified character
 function printStats(character, message){
-    try{
-        //Load character data
-        var data = require('./pcs/'+ character + '.json');
-
+    //Load character data
+    loadData('./pcs/'+ character + '.json').then(function(data){
         let embed = new Discord.RichEmbed()
             .setThumbnail('attachment://image.png')
             .setTitle(`**${data.name}** - ${data.title} - (Level ${data.level} ${data.class})`)
             .setColor(data.color)
             .setDescription(`**HP:** ${data.hp.current}/${data.hp.max} · **AC:** ${data.combat.ac} · **Speed:** ${data.combat.speed}`);
-
-        //Get the possible skills
-        var skills = require('./pcs/skills.json');
         //Get the values for each main stat
         for(key in data.stats){
             var vals = {}
@@ -269,10 +281,10 @@ function printStats(character, message){
         }
         //Send values to the channel
         message.channel.send({embed, files: [{ attachment: data.icon, name: 'image.png' }]});
-    }catch(e){
+    }).catch(function(e){
         message.channel.send(`${character} isn't here.`);
         console.log(e);
-    }
+    });
 }
 
 function get(message, params){
@@ -298,8 +310,6 @@ function get(message, params){
 
 //Gets the proficiency values for some characters in a particular skill
 function printRequestedSkill(skill, characters, message){
-    var skills = require('./pcs/skills.json');
-
     //Check whether the requested skill is either skill or a stat
     var stat = ''
     skillLoop:
@@ -405,7 +415,7 @@ function printBio(character, message){
             //Character portrait
             .setThumbnail('attachment://image.png')
             //Print character Stats
-            .setDescription(`**Available XP**: ${data.xp.available} · **Total XP**: ${data.xp.total}`)
+            .setDescription(`**Total XP**: ${data.xp.total} · **XP to Next Lvl**: ${data.xp.next}`)
             //Print characteristics and statistics
             .addField('**Characteristics**', formatHash(data.characteristics), true)
             .addField('**Statistics**', formatHash(stats), true)
@@ -493,7 +503,7 @@ function hp(message, params){
     }; 
     //Check if all parameters were specified
     if(params.length < 1){
-        message.channel.send('You must specify a character and a value.');
+        message.channel.send('You must specify character(s) and a value.');
         return;
     }
     //Get the amount to increment the hp by and check if its valid
