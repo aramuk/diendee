@@ -1,0 +1,8 @@
+{
+    "Constitution": [],
+    "Strength": ["Athletics"],
+    "Intelligence": ["Arcana", "History", "Investigation", "Nature", "Religion"],
+    "Wisdom": ["Animal Handling", "Insight", "Medicine", "Perception", "Survival"],
+    "Dexterity": ["Acrobatics", "Sleight of Hand", "Stealth"],
+    "Charisma": ["Deception", "Intimidation", "Performance", "Persuasion"]
+}

@@ -1,7 +1,7 @@
 {
     "name": "Diendee",
     "version": "1.0.0",
-    "description": "Helps you play DnD",
+    "description": "A bot that helps you play D&D!",
     "main": "bot.js",
     "author": "±Centurion",
     "dependencies": {
