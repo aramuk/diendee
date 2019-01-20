@@ -1,6 +1,7 @@
 const Discord = require("discord.js");
 const fs = require('fs-extra');
 const auth = require('./auth.json');
+const async = require('async');
 
 //D&D Data
 const mapping = require('./data/mapping.json');
@@ -248,6 +249,14 @@ function stats(message, characters){
     }
 }
 
+function getSkillValue(data, stat, skill){
+    var val = Math.floor((data.stats[stat].value - 10)/2);
+    if(data.stats[stat].proficiencies.hasOwnProperty(skill)){
+        val += (data.stats[key].proficiencies[skill] ? data.proficiency_bonus * 2 : data.proficiency_bonus);
+    }
+    return val;
+}
+
 //Prints the stats of the specified character
 function printStats(character, message){
     //Load character data
@@ -262,10 +271,7 @@ function printStats(character, message){
             var vals = {}
             //Get the values for each proficiency within the main stat
             skills[key].forEach(function(skill){
-                vals[skill] = Math.floor((data.stats[key].value - 10)/2);
-                if(data.stats[key].proficiencies.hasOwnProperty(skill)){
-                    vals[skill] += (data.stats[key].proficiencies[skill] ? data.proficiency_bonus * 2 : data.proficiency_bonus);
-                }
+                vals[skill] = getSkillValue(data, key, skill);
             });
 
             //Constitution has no associated skills
@@ -290,15 +296,27 @@ function get(message, params){
     if(params.length >= 1){
         var choice = params.shift().toLowerCase();
         choice = choice.charAt(0).toUpperCase() + choice.slice(1);
+        var values = [];
         //If no character was specified, print the sender's character's stats
         if(params.length == 0){
-            var pc = mapping['u' + message.author.id];
-            printRequestedSkill(choice, [pc], message);
+            params = [mapping['u' + message.author.id]];
         }
-        //Othewise prin thte stats of all specified characters
-        else{
-            printRequestedSkill(choice, params, message);
-        }
+        getRequestedSkill(choice, params, message).then(function(values){
+            // Print all the requested stat values
+            if(values.length > 0){
+                var output = ''
+                values.forEach(function(value){
+                    output += '**' + value.name + '**: ' + value.stat + '\n';
+                });
+                message.channel.send(genBasicEmbed(`Here are the values for _${choice}_:\n\n${output}`));
+            }
+            else{
+                console.log('Error getting', choice, 'for', params);
+                message.channel.send(genBasicEmbed(`I couldn't find _${choice}_ for ${params}.`));
+            }
+        }).catch(function(error){
+            console.log(error);
+        });
     }
     //If there was no statistic specified
     else{
@@ -307,67 +325,34 @@ function get(message, params){
 }
 
 //Gets the proficiency values for some characters in a particular skill
-function printRequestedSkill(skill, characters, message){
-    //Check whether the requested skill is either skill or a stat
+async function getRequestedSkill(skill, characters, message){
+    //Make sure stat is valid before proceeding
     var stat = ''
-    skillLoop:
     for(key in skills){
-        if(key == skill){
-            stat = key
+        if(key == skill || skills[key].includes(skill)){
+            stat = key;
             break;
         }
-        skills[key].forEach(function(s){
-            if(s == skill){
-                stat = key;
-                break skillLoop;
-            }
-        });
     }
-
-    //If the stat is not valid, return it
+    var promises = [];
     if(stat == ''){
-        message.channel.send(genBasicEmbed(`_${skill}_ is not a valid stat`));
-        return;
+        return promises;
     }
-
     //Find the stat value for each character
-    var values = []
-    characters.forEach(function(character){
-        var data = '';
-        //Check to see if the character exists
-        try{
-            data = require('./pcs/' + character + '.json');
-            var val = 0;
-            //Get the value if the requested value is a stat
-            if(stat == skill){
-                val = data.stats[stat][0];
-            }
-            //Get the value if the requested value is a stat
-            else{
-                //Get the value if there are proficiencies
-                if(data.stats[stat][1][skill]){
-                    val = data.stats[stat][0] + 'g+' + data.stats[stat][1][skill] + 'y';
-                }
-                //Get the value if there are no proficiencies
-                else{
-                    val = data.stats[stat][0] + 'g';
-                }
-            }
-            values.push({"name": data.name, "stat": `${val}`});
+    promises = characters.map(async character => {
+        const data = await loadData('./pcs/' + character + '.json');
+        var val = 0;
+        //Get the value if the requested value is a stat
+        if(stat == skill){
+            val = data.stats[stat].value;
         }
-        catch(e){
-            message.channel.send(`${character} isn't here.`);
+        //Get the value if the requested value is a stat
+        else{
+            val = getSkillValue(data, stat, skill);
         }
+        return {"name": data.name, "stat": `${val}`};
     });
-
-    //Print all the requested stat values
-    if(values.length > 0){
-        var output = ''
-        values.forEach(function(value){
-            output += '**' + value.name + '**: ' + value.stat + '\n';
-        });
-        message.channel.send(genBasicEmbed(`Here are the values for _${skill}_:\n\n${output}`));
-    }
+    return await Promise.all(promises);
 }
 
 //Given a hash, return all key-value pairs in a single string, seperated by newlines
