@@ -59,6 +59,9 @@ client.on("message", function(message){
             case 'hp':
                 hp(message, args);
                 break;
+            case 'xp':
+                xp(message, args);
+                break;
             //$initiative
             case 'initiative':
                 initiative(message, args);
@@ -109,6 +112,15 @@ function parseNat(val){
         return val;
     }
     return 1;
+}
+
+//Given a hash, return all key-value pairs in a single string, seperated by newlines
+function formatHash(hash){
+    var output = ``;
+    for(key in hash){
+        output += `**${key}:** ${hash[key]}\n`;
+    }
+    return output;
 }
 
 //Loads a file from memory
@@ -224,8 +236,8 @@ function usage(message){
             "I'll roll the specified roll.\nRolls can be specifed as `2d6+d8+2d20`.\nYou can specify multiple rolls, just seperate them with a space like so: `d20 2d6+5`.\n`--drop` is optional, but if you add it I will drop the lowest roll.")
         .addField(`${auth.prefix}stats {name ...}`, "I'll look up some stats for you. I'll look up yours if you don't specify character(s).")
         .addField(`${auth.prefix}bio {name1 ...}`, "I'll to look up some bios. I'll look up yours if you don't specify character(s).")
-        .addField(`${auth.prefix}readbio {name1 ...}`, "I'll send you some adventurer(s)'s complete life story. I'll send your own if you don't specify character(s).")
-        .addField(`${auth.prefix}get (stat) {name1 ...}`, "I'll tell you the proficiencies for a given stat. I'll look up yours if you don't specify character(s).")
+        .addField(`${auth.prefix}readbio {name1 ...}`, "I'll send you some adventurer(s)'s life story. I'll find yours if you don't specify character(s).")
+        .addField(`${auth.prefix}get stat {name1 ...}`, "I'll tell you the proficiencies for a given stat. I'll look up yours if you don't specify character(s).")
         .addField(`${auth.prefix}initiative {first_last:modifier ...}`, "I'll roll initiative for you and pin it to the channel. I can roll NPCs too if you give me their name and initiative modifier.");
     //Pin usage commands to the channel
     message.channel.send(embed).then(function(message){
@@ -352,15 +364,6 @@ async function getRequestedSkill(skill, characters, message){
         return {"name": data.name, "stat": `${val}`};
     });
     return await Promise.all(promises);
-}
-
-//Given a hash, return all key-value pairs in a single string, seperated by newlines
-function formatHash(hash){
-    var output = ``;
-    for(key in hash){
-        output += `**${key}:** ${hash[key]}\n`;
-    }
-    return output;
 }
 
 //Print the requested bios.
@@ -591,7 +594,6 @@ async function getInitiativeRoll(npcs){
     })
     return initiatives;
 }
-
 
 //Bot login
 client.login(auth.token);
