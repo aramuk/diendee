@@ -143,7 +143,7 @@ function roll(message, args){
         message.channel.send('Please specify die/dice to roll.');
         return;
     }
-    var send = false;
+    var send = true;
     let embed = new Discord.RichEmbed()
             //Set thumbnail to Diendee's profile pic
             .setThumbnail(client.user.displayAvatarURL)
@@ -162,6 +162,7 @@ function roll(message, args){
             // console.log('['+inp+']', cmds);
             if(!cmds){
                 message.channel.send('Could not roll: ' + inp);
+                send = false;
             }
             else{
                 rolls.push({'cmd': cmds[0], 'result': rollDice(parseNat(cmds[1]), parseNat(cmds[2]))});
@@ -230,15 +231,15 @@ function usage(message){
     removePinnedMessages(message, message_text);
     //All the usage commands
     let embed = genBasicEmbed(message_text)
-        .addField(`${auth.prefix}about`, "Learn about me")
-        .addField(`${auth.prefix}usage`, "Learn how to talk to me")
-        .addField(`${auth.prefix}roll (dice{+dice...})+ [--drop]`, 
-            "I'll roll the specified roll.\nRolls can be specifed as `2d6+d8+2d20`.\nYou can specify multiple rolls, just seperate them with a space like so: `d20 2d6+5`.\n`--drop` is optional, but if you add it I will drop the lowest roll.")
-        .addField(`${auth.prefix}stats {name ...}`, "I'll look up some stats for you. I'll look up yours if you don't specify character(s).")
-        .addField(`${auth.prefix}bio {name1 ...}`, "I'll to look up some bios. I'll look up yours if you don't specify character(s).")
-        .addField(`${auth.prefix}readbio {name1 ...}`, "I'll send you some adventurer(s)'s life story. I'll find yours if you don't specify character(s).")
-        .addField(`${auth.prefix}get stat {name1 ...}`, "I'll tell you the proficiencies for a given stat. I'll look up yours if you don't specify character(s).")
-        .addField(`${auth.prefix}initiative {first_last:modifier ...}`, "I'll roll initiative for you and pin it to the channel. I can roll NPCs too if you give me their name and initiative modifier.");
+        .addField(`${auth.prefix}about`, "Learn about me!")
+        .addField(`${auth.prefix}usage`, "Learn how to talk to me!")
+        .addField(`${auth.prefix}roll _dice{+dice...} {dice{+dice..}}_`, 
+            "I'll roll the specified roll.\nRolls can be specifed as `2d6+d8+2d20`.\nYou can specify multiple rolls, just seperate them with a space like so: `d20 2d6+5`.")
+        .addField(`${auth.prefix}stats _{name ...}_`, "I'll look up some stats for you. I'll look up yours if you don't specify character(s).")
+        .addField(`${auth.prefix}bio _{name ...}_`, "I'll to look up some bios. I'll look up yours if you don't specify character(s).")
+        .addField(`${auth.prefix}readbio _{name ...}_`, "I'll send you some adventurer(s)'s life story. I'll find yours if you don't specify character(s).")
+        .addField(`${auth.prefix}get _stat {name ...}_`, "I'll tell you the proficiencies for a given stat. I'll look up yours if you don't specify character(s).")
+        .addField(`${auth.prefix}initiative _{first.last:modifier ...}_`, "I'll roll initiative for you and pin it to the channel. I can roll NPCs too if you give me their name and initiative modifier.");
     //Pin usage commands to the channel
     message.channel.send(embed).then(function(message){
         message.pin();
@@ -668,7 +669,8 @@ async function getInitiativeRoll(npcs){
     //Check to see if any NPCs were specifed and roll for them if applicable
     if(npcs){
         npcs.forEach(function(npc){
-            params = npc.replace('_', ' ').split(/\:/g);
+            params = npc.replace('.', ' ').split(/\:/g);
+            console.log(params);
             if(params.length == 2 && !isNaN(params[1])){
                 params[1] = parseInt(params[1]);
                 initiatives.push({name: params[0], initiative: rollDice(1,20).total + params[1]});
