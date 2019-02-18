@@ -306,35 +306,34 @@ function printStats(character, message){
 }
 
 function get(message, params){
-    //Print the stats of all the specified characters
-    if(params.length >= 1){
-        var choice = params.shift().toLowerCase();
-        choice = choice.charAt(0).toUpperCase() + choice.slice(1);
-        //If no character was specified, print the sender's character's stats
-        if(params.length == 0){
-            params = [mapping['u' + message.author.id]];
-        }
-        getRequestedSkill(choice, params, message).then(function(values){
-            // Print all the requested stat values
-            if(values.length > 0){
-                var output = ''
-                values.forEach(function(value){
-                    output += '**' + value.name + '**: ' + value.stat + '\n';
-                });
-                message.channel.send(genBasicEmbed(`Here are the values for _${choice}_:\n\n${output}`));
-            }
-            else{
-                console.log('Error getting', choice, 'for', params);
-                message.channel.send(genBasicEmbed(`I couldn't find _${choice}_ for ${params}.`));
-            }
-        }).catch(function(error){
-            console.log(error);
-        });
-    }
     //If there was no statistic specified
-    else{
+    if(params.length < 1){
         message.channel.send('You must specify a statistic.');
+        return;
     }
+    //Print the stats of all the specified characters
+    var choice = params.shift().toLowerCase();
+    choice = choice.charAt(0).toUpperCase() + choice.slice(1);
+    //If no character was specified, print the sender's character's stats
+    if(params.length == 0){
+        params = [mapping['u' + message.author.id]];
+    }
+    getRequestedSkill(choice, params, message).then(function(values){
+        // Print all the requested stat values
+        if(values.length > 0){
+            var output = ''
+            values.forEach(function(value){
+                output += '**' + value.name + '**: ' + value.stat + '\n';
+            });
+            message.channel.send(genBasicEmbed(`Here are the values for _${choice}_:\n\n${output}`));
+        }
+        else{
+            console.log('Error getting', choice, 'for', params);
+            message.channel.send(genBasicEmbed(`I couldn't find _${choice}_ for ${params}.`));
+        }
+    }).catch(function(error){
+        console.log(error);
+    });
 }
 
 //Gets the proficiency values for some characters in a particular skill
@@ -569,8 +568,6 @@ async function xp(message, params){
         message.channel.send('You must specify character(s) and a value.');
         return;
     }
-    // var errors = [];
-    // var pcs = [];
     var results = params.map(async param => {
         var cmd = param.split(/\:/g);
         var val = parseInt(cmd[1]);
