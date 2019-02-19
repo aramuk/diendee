@@ -1,13 +1,15 @@
+//Dependencies
 const Discord = require("discord.js");
 const fs = require('fs-extra');
-const auth = require('./auth.json');
+
+global.BASE_PATH = __dirname;
+const client = new Discord.Client();
+const auth = require(BASE_PATH + '/auth.json');
 
 //D&D Data
-const mapping = require('./data/mapping.json');
-const skills = require('./data/skills.json');
-const levels = require('./data/levels.json');
-
-const client = new Discord.Client();
+const mapping = require(BASE_PATH + '/data/mapping.json');
+const skills = require(BASE_PATH + '/data/skills.json');
+const levels = require(BASE_PATH + '/data/levels.json');
 
 //On bot start
 client.on("ready", function(){
@@ -123,7 +125,7 @@ function formatHash(hash){
     return output;
 }
 
-//Loads a file from memory
+//Loads a JSON from memory
 function loadData(path){
     return new Promise(function(resolve, reject){
         fs.readFile(path, 'utf-8', function(err, data){
@@ -143,7 +145,7 @@ function roll(message, args){
         message.channel.send('Please specify die/dice to roll.');
         return;
     }
-    var send = false;
+    var send = true;
     let embed = new Discord.RichEmbed()
         //Set thumbnail to Diendee's profile pic
         .setThumbnail(client.user.displayAvatarURL)
@@ -162,6 +164,7 @@ function roll(message, args){
             // console.log('['+inp+']', cmds);
             if(!cmds){
                 message.channel.send('Could not roll: ' + inp);
+                send = false;
             }
             else{
                 rolls.push({'cmd': cmds[0], 'result': rollDice(parseNat(cmds[1]), parseNat(cmds[2]))});
@@ -271,7 +274,7 @@ function getSkillValue(data, stat, skill){
 //Prints the stats of the specified character
 function printStats(character, message){
     //Load character data
-    loadData('./pcs/'+ character + '.json').then(function(data){
+    loadData(BASE_PATH + '/pcs/'+ character + '.json').then(function(data){
         let embed = new Discord.RichEmbed()
             .setThumbnail('attachment://image.png')
             .setTitle(`**${data.name}** - ${data.title} - (Level ${data.level} ${data.class})`)
@@ -295,7 +298,7 @@ function printStats(character, message){
             }
         }
         //Send values to the channel
-        message.channel.send({embed, files: [{ attachment: data.icon, name: 'image.png' }]});
+        message.channel.send({embed, files: [{ attachment: BASE_PATH + data.icon, name: 'image.png' }]});
     }).catch(function(e){
         message.channel.send(`${character} isn't here.`);
         console.log(e);
@@ -303,36 +306,34 @@ function printStats(character, message){
 }
 
 function get(message, params){
-    //Print the stats of all the specified characters
-    if(params.length >= 1){
-        var choice = params.shift().toLowerCase();
-        choice = choice.charAt(0).toUpperCase() + choice.slice(1);
-        var values = [];
-        //If no character was specified, print the sender's character's stats
-        if(params.length == 0){
-            params = [mapping['u' + message.author.id]];
-        }
-        getRequestedSkill(choice, params).then(function(values){
-            // Print all the requested stat values
-            if(values.length > 0){
-                var output = ''
-                values.forEach(function(value){
-                    output += '**' + value.name + '**: ' + value.stat + '\n';
-                });
-                message.channel.send(genBasicEmbed(`Here are the values for _${choice}_:\n\n${output}`));
-            }
-            else{
-                console.log('Error getting', choice, 'for', params);
-                message.channel.send(genBasicEmbed(`I couldn't find _${choice}_ for ${params}.`));
-            }
-        }).catch(function(error){
-            console.log(error);
-        });
-    }
     //If there was no statistic specified
-    else{
+    if(params.length < 1){
         message.channel.send('You must specify a statistic.');
+        return;
     }
+    //Print the stats of all the specified characters
+    var choice = params.shift().toLowerCase();
+    choice = choice.charAt(0).toUpperCase() + choice.slice(1);
+    //If no character was specified, print the sender's character's stats
+    if(params.length == 0){
+        params = [mapping['u' + message.author.id]];
+    }
+    getRequestedSkill(choice, params, message).then(function(values){
+        // Print all the requested stat values
+        if(values.length > 0){
+            var output = ''
+            values.forEach(function(value){
+                output += '**' + value.name + '**: ' + value.stat + '\n';
+            });
+            message.channel.send(genBasicEmbed(`Here are the values for _${choice}_:\n\n${output}`));
+        }
+        else{
+            console.log('Error getting', choice, 'for', params);
+            message.channel.send(genBasicEmbed(`I couldn't find _${choice}_ for ${params}.`));
+        }
+    }).catch(function(error){
+        console.log(error);
+    });
 }
 
 //Gets the proficiency values for some characters in a particular skill
@@ -351,7 +352,7 @@ async function getRequestedSkill(skill, characters){
     }
     //Find the stat value for each character
     promises = characters.map(async character => {
-        const data = await loadData('./pcs/' + character + '.json');
+        const data = await loadData(BASE_PATH + '/pcs/' + character + '.json');
         var val = 0;
         //Get the value if the requested value is a stat
         if(stat == skill){
@@ -383,7 +384,7 @@ function bio(message, characters){
 
 //Prints the bio of a specified chracter
 function printBio(character, message){
-    loadData('./pcs/' + character + '.json').then(function(data){
+    loadData(BASE_PATH + '/pcs/' + character + '.json').then(function(data){
         var acct = client.users.get(data.player)
         var stats = {}
         for(key in data.stats){
@@ -400,13 +401,13 @@ function printBio(character, message){
             //Print characteristics and statistics
             .addField('**Characteristics**', formatHash(data.characteristics), true)
             .addField('**Statistics**', formatHash(stats), true)
-            .addField('**Combat**', `**HP:** ${data.hp.current}/${data.hp.max}\n**AC:** ${data.combat.ac}\n**Speed:** ${data.combat.speed}`, true)
-            .addBlankField(true)
+            .addField('**Combat**', `**HP:** ${data.hp.current}/${data.hp.max}\n**AC:** ${data.combat.ac}\n**Speed:** ${data.combat.speed}\n`, true)
+            .addBlankField()
             //Print a preview to the bio
             .addField('**Bio Preview**', data.bio_preview + "\n\nUse the `$readbio` command to continue reading.")
             .setColor(data.color);
 
-        message.channel.send({embed, files: [{ attachment: data.icon, name: 'image.png' }]});
+        message.channel.send({embed, files: [{ attachment: BASE_PATH + data.icon, name: 'image.png' }]});
     }).catch(function(e){
         message.channel.send(`${character} isn't here.`);
         console.log(e);
@@ -434,7 +435,7 @@ function readbio(message, characters){
 //Sends the full bio of a character to the requester
 function sendFullBio(character, message){
     //Read the full bio from a file
-    fs.readFile('./pcs/bios/' + character + '.txt', 'utf-8', function(err, data){
+    fs.readFile(BASE_PATH + '/pcs/bios/' + character + '.txt', 'utf-8', function(err, data){
         if(err){
             console.log("Error", err);
         }
@@ -496,7 +497,7 @@ async function hp(message, params){
             if(cmd[1] == 'max'){
                 val = cmd[1];
             }
-            var path = './pcs/' + cmd[0].toLowerCase() + '.json';
+            var path = BASE_PATH + '/pcs/' + cmd[0].toLowerCase() + '.json';
             //Edit the HP and record whether it works
             return {'pc': cmd[0], 'success': await editHP(path, val)};
         }
@@ -567,14 +568,12 @@ async function xp(message, params){
         message.channel.send('You must specify character(s) and a value.');
         return;
     }
-    // var errors = [];
-    // var pcs = [];
     var results = params.map(async param => {
         var cmd = param.split(/\:/g);
         var val = parseInt(cmd[1]);
         //Check to see if the xp value is valid, before trying to update
         if(!isNaN(val)){
-            var path = './pcs/' + cmd[0].toLowerCase() + '.json';
+            var path = BASE_PATH + '/pcs/' + cmd[0].toLowerCase() + '.json';
             return {'pc': cmd[0], 'success': await editXP(path, val)};
         }
         else{
@@ -661,14 +660,14 @@ async function getInitiativeRoll(npcs){
         pcs.push(mapping[key]);
     }
     promises = pcs.map(async pc => {
-        const data = await loadData('./pcs/' + pc + '.json');
+        const data = await loadData(BASE_PATH + '/pcs/' + pc + '.json');
         return {name: data.name, initiative: rollDice(1,20).total + data.initiative_bonus};
     });
     const initiatives = await Promise.all(promises);
     //Check to see if any NPCs were specifed and roll for them if applicable
     if(npcs){
         npcs.forEach(function(npc){
-            params = npc.replace('_', ' ').split(/\:/g);
+            params = npc.replace('.', ' ').split(/\:/g);
             if(params.length == 2 && !isNaN(params[1])){
                 params[1] = parseInt(params[1]);
                 initiatives.push({name: params[0], initiative: rollDice(1,20).total + params[1]});
