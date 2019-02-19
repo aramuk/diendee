@@ -401,8 +401,8 @@ function printBio(character, message){
             //Print characteristics and statistics
             .addField('**Characteristics**', formatHash(data.characteristics), true)
             .addField('**Statistics**', formatHash(stats), true)
-            .addField('**Combat**', `**HP:** ${data.hp.current}/${data.hp.max}\n**AC:** ${data.combat.ac}\n**Speed:** ${data.combat.speed}`, true)
-            .addBlankField(true)
+            .addField('**Combat**', `**HP:** ${data.hp.current}/${data.hp.max}\n**AC:** ${data.combat.ac}\n**Speed:** ${data.combat.speed}\n`, true)
+            .addBlankField()
             //Print a preview to the bio
             .addField('**Bio Preview**', data.bio_preview + "\n\nUse the `$readbio` command to continue reading.")
             .setColor(data.color);
