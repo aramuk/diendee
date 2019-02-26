@@ -248,6 +248,39 @@ function usage(message){
     });
 }
 
+function isStat(value){
+    return skills.hasOwnProperty(value);
+}
+
+function getStatValue(data, value) {
+    return Math.floor((data.stats[value].value-10)/2);
+}
+
+function isSkill(value){
+    for(key in skills){
+        if(skills[key].includes(value)){
+            return true;
+        }
+    }
+    return false;
+}
+
+function getSkillValue(data, skill, stat=undefined){
+    if(!stat){
+        for(key in skills){
+            if(skills[key].includes(skill)){
+                stat = key;
+                break;
+            }
+        }
+    }
+    var val = Math.floor((data.stats[stat].value - 10)/2);
+    if(data.stats[stat].proficiencies.hasOwnProperty(skill)){
+        val += (data.stats[stat].proficiencies[skill] ? data.proficiency_bonus * 2 : data.proficiency_bonus);
+    }
+    return val;
+}
+
 //Print the requested stats
 function stats(message, characters){
     //Print the stats of all the specified characters
@@ -263,14 +296,6 @@ function stats(message, characters){
     }
 }
 
-function getSkillValue(data, stat, skill){
-    var val = Math.floor((data.stats[stat].value - 10)/2);
-    if(data.stats[stat].proficiencies.hasOwnProperty(skill)){
-        val += (data.stats[key].proficiencies[skill] ? data.proficiency_bonus * 2 : data.proficiency_bonus);
-    }
-    return val;
-}
-
 //Prints the stats of the specified character
 function printStats(character, message){
     //Load character data
@@ -282,17 +307,16 @@ function printStats(character, message){
             .setDescription(`**HP:** ${data.hp.current}/${data.hp.max} · **AC:** ${data.combat.ac} · **Speed:** ${data.combat.speed}`);
         //Get the values for each main stat
         for(key in data.stats){
-            var vals = {}
-            //Get the values for each proficiency within the main stat
-            skills[key].forEach(function(skill){
-                vals[skill] = getSkillValue(data, key, skill);
-            });
-
             //Constitution has no associated skills
-            if(key == "Constitution"){
+            if(key == "Constitution"){                
                 embed.addField(`**${key}: ${data.stats[key].value}**`, "_None_", true);
             }
             else{
+                var vals = {}
+                //Get the values for each proficiency within the main stat
+                skills[key].forEach(function(skill){
+                    vals[skill] = getSkillValue(data, skill, key);
+                });    
                 //Add formatted values to the embed to be outputted
                 embed.addField(`**${key}: ${data.stats[key].value}**`, formatHash(vals), true);
             }
@@ -306,76 +330,46 @@ function printStats(character, message){
 }
 
 function get(message, params){
-    //If there was no statistic specified
+    //If there was no choice specified
     if(params.length < 1){
-        message.channel.send('You must specify a statistic.');
+        message.channel.send(genBasicEmbed(`You must specify a value to get and optionally, which PCs to search.`));
         return;
     }
+
     //Print the stats of all the specified characters
     var choice = params.shift().toLowerCase();
     choice = choice.charAt(0).toUpperCase() + choice.slice(1);
+
+    //Make sure supplied choice is valid
+    if(!isSkill(choice) && !isStat(choice)){
+        message.channel.send(genBasicEmbed(`I couldn't find a value named _${choice}_.`));
+        return;
+    }
     //If no character was specified, print the sender's character's stats
     if(params.length == 0){
         params = [mapping['u' + message.author.id]];
     }
-    getRequestedSkill(choice, params, message).then(function(values){
+    getRequestedValue(choice, params, message).then(function(characters){
         // Print all the requested stat values
-        if(values.length > 0){
+        if(characters.length > 0){
             var output = ''
-            values.forEach(function(value){
-                output += '**' + value.name + '**: ' + value.stat + '\n';
+            characters.forEach(function(character){
+                output += '**' + character.name + '**: ' + character.value + '\n';
             });
             message.channel.send(genBasicEmbed(`Here are the values for _${choice}_:\n\n${output}`));
         }
-        else{
-            console.log('Error getting', choice, 'for', params);
-            message.channel.send(genBasicEmbed(`I couldn't find _${choice}_ for ${params}.`));
-        }
     }).catch(function(error){
         console.log(error);
+        message.channel.send(genBasicEmbed(`I ran into some trouble getting ${choice} for ${params}`));
     });
 }
 
-function isStat(value){
-    for(key in skills){
-        if(skills[key].includes(value)){
-            return true;
-        }
-    }
-    return false;
-}
-
-function isSkill(value){
-    return skills.hasOwnProperty(value);
-}
-
 //Gets the proficiency values for some characters in a particular skill
-async function getRequestedSkill(skill, characters){
-    //Make sure stat is valid before proceeding
-    var stat = ''
-    for(key in skills){
-        if(key == skill || skills[key].includes(skill)){
-            stat = key;
-            break;
-        }
-    }
-    var promises = [];
-    if(stat == ''){
-        return promises;
-    }
+async function getRequestedValue(value, characters){
     //Find the stat value for each character
     promises = characters.map(async character => {
         const data = await loadData(BASE_PATH + '/pcs/' + character + '.json');
-        var val = 0;
-        //Get the value if the requested value is a stat
-        if(stat == skill){
-            val = data.stats[stat].value;
-        }
-        //Get the value if the requested value is a stat
-        else{
-            val = getSkillValue(data, stat, skill);
-        }
-        return {"name": data.name, "stat": `${val}`};
+        return {"name": data.name, "value": `${isStat(value) ? getStatValue(data, value) : getSkillValue(data, value)}`};
     });
     return await Promise.all(promises);
 }
