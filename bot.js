@@ -145,7 +145,6 @@ function roll(message, args){
         message.channel.send('Please specify die/dice to roll.');
         return;
     }
-    var send = true;
     let embed = new Discord.RichEmbed()
         //Set thumbnail to Diendee's profile pic
         .setThumbnail(client.user.displayAvatarURL)
@@ -159,28 +158,32 @@ function roll(message, args){
     const RE = /^(\d*)(?:d(\d+))?$/;
     var results = new Promise(function(resolve, reject){
         args.forEach(async function(arg){
-        //Parse the roll commands and roll them
-            const pendingRolls = arg.split('+').map(async inp => {
-                cmds = RE.exec(inp);
-                if(cmds){
-                    var sides = parseNat(cmds[2]);
-                    var quant = parseNat(cmds[1]);
-                    return {'cmd': cmds[0], 'result': sides == 1 ? {'total': quant, 'rolls': [quant]} : rollDice(quant, sides)};
-                }
-                else if(isStat(inp) || isSkill(inp)){
-                    var bonus = await getRequestedValue(inp, [mapping['u' + message.author.id]]);
-                    bonus = parseInt(bonus[0].value);
-                    var roll = rollDice(1,20);
-                    roll.total += bonus;
-                    roll.rolls.push(bonus);
-                    return {'cmd': 'd20+' + bonus, 'result': roll};
-                }
-                else{
-                    message.channel.send(genBasicEmbed(`Sorry, I could not roll _${inp}_.`));
-                    resolve(false);
-                    return;
-                }
-            });
+            arg = arg.replace(/\./g, ' ');
+            //Parse the roll commands and roll them
+            var pendingRolls = [];
+            if(isStat(arg) || isSkill(arg)){
+                var bonus = await getRequestedValue(arg, [mapping['u' + message.author.id]]);
+                bonus = parseInt(bonus[0].value);
+                var roll = rollDice(1,20);
+                roll.total += bonus;
+                roll.rolls.push(bonus);
+                pendingRolls.push({'cmd': 'd20+' + bonus, 'result': roll});
+            }
+            else {
+                arg.split('+').forEach(function(inp){
+                    cmds = RE.exec(inp);
+                    if(cmds){
+                        var sides = parseNat(cmds[2]);
+                        var quant = parseNat(cmds[1]);
+                        pendingRolls.push({'cmd': cmds[0], 'result': sides == 1 ? {'total': quant, 'rolls': [quant]} : rollDice(quant, sides)});
+                    }
+                    else{
+                        message.channel.send(genBasicEmbed(`Sorry, I could not roll _${inp}_.`));
+                        resolve(false);
+                        return;
+                    }
+                });
+            }
             //Print the results
             const rolls = await Promise.all(pendingRolls);
             if(rolls.length > 0){
