@@ -153,35 +153,54 @@ function roll(message, args){
         .setAuthor(message.author.username + ' rolled: ', message.author.displayAvatarURL)
         .setColor('#fcce63');
     /*Known bugs:
-        20, results in a roll of 2 and 0
+        - 20, results in 20 rolls of 1
+        - Roll by stat/skill requires correct capitalization
     */
-    const RE = /^(\d*)d?(\d+)$/;
-    args.forEach(function(arg){
-        var rolls = [];
+    const RE = /^(\d*)(?:d(\d+))?$/;
+    var results = new Promise(function(resolve, reject){
+        args.forEach(async function(arg){
         //Parse the roll commands and roll them
-        arg.split('+').forEach(function(inp){
-            cmds = RE.exec(inp);
-            // console.log('['+inp+']', cmds);
-            if(!cmds){
-                message.channel.send('Could not roll: ' + inp);
-                send = false;
-            }
-            else{
-                rolls.push({'cmd': cmds[0], 'result': rollDice(parseNat(cmds[1]), parseNat(cmds[2]))});
-            }
-        });
-        //Print the results
-        if(rolls.length > 0){
-            var total = 0;
-            rolls.forEach(function(roll){
-                total += roll.result.total;
+            const pendingRolls = arg.split('+').map(async inp => {
+                cmds = RE.exec(inp);
+                if(cmds){
+                    var sides = parseNat(cmds[2]);
+                    var quant = parseNat(cmds[1]);
+                    return {'cmd': cmds[0], 'result': sides == 1 ? {'total': quant, 'rolls': [quant]} : rollDice(quant, sides)};
+                }
+                else if(isStat(inp) || isSkill(inp)){
+                    var bonus = await getRequestedValue(inp, [mapping['u' + message.author.id]]);
+                    bonus = parseInt(bonus[0].value);
+                    var roll = rollDice(1,20);
+                    roll.total += bonus;
+                    roll.rolls.push(bonus);
+                    return {'cmd': 'd20+' + bonus, 'result': roll};
+                }
+                else{
+                    message.channel.send(genBasicEmbed(`Sorry, I could not roll _${inp}_.`));
+                    resolve(false);
+                    return;
+                }
             });
-            embed.addField(`**${arg}**`, formatRolls(rolls) + `**Total: ${total}**\n`, true);
-        }
+            //Print the results
+            const rolls = await Promise.all(pendingRolls);
+            if(rolls.length > 0){
+                var total = 0;
+                rolls.forEach(function(roll){
+                    total += roll.result.total;
+                });
+                embed.addField(`**${arg}**`, formatRolls(rolls) + `**Total: ${total}**\n`, true);
+            }
+            resolve(true);
+        });
     });
-    if(send){
-        message.channel.send(embed);
-    }
+    results.then(function(send){
+        if(send){
+            message.channel.send(embed);
+        }
+    }).catch(function(err){
+        console.log('Error rolling dice')
+        message.channel.send(genBasicEmbed('I ran into some trouble rolling those dice'));
+    });
 }
 
 //Rolls {dice}, each with {sides}
@@ -666,7 +685,7 @@ async function getInitiativeRoll(npcs){
     for(key in mapping){
         pcs.push(mapping[key]);
     }
-    promises = pcs.map(async pc => {
+    const promises = pcs.map(async pc => {
         const data = await loadData(BASE_PATH + '/pcs/' + pc + '.json');
         return {name: data.name, initiative: rollDice(1,20).total + data.initiative_bonus};
     });
