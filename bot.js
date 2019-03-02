@@ -151,9 +151,6 @@ function roll(message, args){
         //Set author to the person who requested the roll
         .setAuthor(message.author.username + ' rolled: ', message.author.displayAvatarURL)
         .setColor('#fcce63');
-    /*Known bugs:
-        - 20, results in 20 rolls of 1
-    */
     const RE = /^(\d*)(?:d(\d+))?$/;
     var results = new Promise(function(resolve, reject){
         args.forEach(async function(arg){
@@ -212,10 +209,7 @@ function rollDice(dice, sides){
     for(d = 0; d < dice; d++){
         rolls.push(Math.floor(Math.random() * sides) + 1);
     }
-    function add(a, b) {
-        return a + b;
-    }
-    return {'total': rolls.reduce(add, 0), 'rolls': rolls};
+    return {'total': rolls.reduce((a,b) => a + b, 0), 'rolls': rolls};
 }
 
 //Turns a JSON of roll results into a string
@@ -257,12 +251,12 @@ function usage(message){
     let embed = genBasicEmbed(message_text)
         .addField(`${auth.prefix}about`, "Learn about me!")
         .addField(`${auth.prefix}usage`, "Learn how to talk to me!")
-        .addField(`${auth.prefix}roll _dice{+dice...} {dice{+dice..}}_`, 
-            "I'll roll the specified roll.\nRolls can be specifed as `2d6+d8+2d20`.\nYou can specify multiple rolls, just seperate them with a space like so: `d20 2d6+5`.")
+        .addField(`${auth.prefix}roll _[dice{+dice...}|attribute]_`, 
+            "I'll roll the specified roll.\nRolls can be specifed as `$roll 2d6+d8+2d20`.\nYou can specify multiple rolls, just seperate them with a space like so: `$roll d20 2d6+5`.\nYou can also roll by attributes. Try `$roll Strength` to make a Strength check.")
         .addField(`${auth.prefix}stats _{name ...}_`, "I'll look up some stats for you. I'll look up yours if you don't specify character(s).")
         .addField(`${auth.prefix}bio _{name ...}_`, "I'll to look up some bios. I'll look up yours if you don't specify character(s).")
         .addField(`${auth.prefix}readbio _{name ...}_`, "I'll send you some adventurer(s)'s life story. I'll find yours if you don't specify character(s).")
-        .addField(`${auth.prefix}get _stat {name ...}_`, "I'll tell you the proficiencies for a given stat. I'll look up yours if you don't specify character(s).")
+        .addField(`${auth.prefix}get _attribute {name ...}_`, "I'll tell you the proficiencies for a given stat. I'll look up yours if you don't specify character(s).")
         .addField(`${auth.prefix}initiative _{first.last:modifier ...}_`, "I'll roll initiative for you and pin it to the channel. I can roll NPCs too if you give me their name and initiative modifier.");
     //Pin usage commands to the channel
     message.channel.send(embed).then(function(message){
@@ -346,7 +340,7 @@ function printStats(character, message){
         //Send values to the channel
         message.channel.send({embed, files: [{ attachment: BASE_PATH + data.icon, name: 'image.png' }]});
     }).catch(function(e){
-        message.channel.send(`${character} isn't here.`);
+        message.channel.send(genBasicEmbed(`I couldn't find a PC named ${character}.`));
         console.log(e);
     });
 }
@@ -438,7 +432,7 @@ function printBio(character, message){
 
         message.channel.send({embed, files: [{ attachment: BASE_PATH + data.icon, name: 'image.png' }]});
     }).catch(function(e){
-        message.channel.send(`${character} isn't here.`);
+        message.channel.send(genBasicEmbed(`I couldn't find a PC named ${character}.`));
         console.log(e);
     });
 }
@@ -466,7 +460,7 @@ function sendFullBio(character, message){
     //Read the full bio from a file
     fs.readFile(BASE_PATH + '/pcs/bios/' + character + '.txt', 'utf-8', function(err, data){
         if(err){
-            console.log("Error", err);
+            console.log("Error loading file: ", err);
         }
         else{
             paragraphs = data.split("\n\n");
