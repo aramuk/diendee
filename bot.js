@@ -153,7 +153,6 @@ function roll(message, args){
         .setColor('#fcce63');
     /*Known bugs:
         - 20, results in 20 rolls of 1
-        - Roll by stat/skill requires correct capitalization
     */
     const RE = /^(\d*)(?:d(\d+))?$/;
     var results = new Promise(function(resolve, reject){
@@ -161,8 +160,9 @@ function roll(message, args){
             arg = arg.replace(/\./g, ' ');
             //Parse the roll commands and roll them
             var pendingRolls = [];
-            if(isStat(arg) || isSkill(arg)){
-                var bonus = await getRequestedValue(arg, [mapping['u' + message.author.id]]);
+            var cmd = arg[0].toUpperCase() + arg.slice(1).toLowerCase();
+            if(isStat(cmd) || isSkill(cmd)){
+                var bonus = await getRequestedValue(cmd, [mapping['u' + message.author.id]]);
                 bonus = parseInt(bonus[0].value);
                 var roll = rollDice(1,20);
                 roll.total += bonus;
