@@ -440,7 +440,7 @@ function printBio(character, message){
 //Dms the bio of the specified characters to the requester
 function readbio(message, characters){
     //Format and print some flavor text
-    message.author.send(genBasicEmbed(`${genFlavorText()}`))
+    message.author.send(genBasicEmbed(`${genFlavorText()}`));
 
     //Print the bio of each of the specified character's
     if(characters.length > 0){
@@ -632,10 +632,10 @@ function editXP(path, value){
                 Can only gain 1 level at a time
             */
             data.xp.total += value;
-            if(data.xp.total > levels[data.level + 1].xp){
+            while (data.xp.total >= levels[data.level + 1].xp){
                 data.level += 1;
             }
-            else if(data.xp.total < levels[data.level].xp){
+            while (data.xp.total < levels[data.level].xp){
                 data.level -= 1;
             }
             data.xp.next = levels[data.level+1].xp - data.xp.total;
