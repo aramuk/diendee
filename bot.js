@@ -416,7 +416,7 @@ function printBio(character, message){
 
         let embed = new Discord.RichEmbed()
             .setAuthor(acct.username, acct.displayAvatarURL)
-            .setTitle(`**${data.name}** - ${data.title} - (Level ${data.level} ${data.class})`)
+            .setTitle(`**${data.name}** - ${data.title} - (Level ${data.level} ${data.subclass})`)
             //Character portrait
             .setThumbnail('attachment://image.png')
             //Print character Stats
@@ -424,7 +424,8 @@ function printBio(character, message){
             //Print characteristics and statistics
             .addField('**Characteristics**', formatHash(data.characteristics), true)
             .addField('**Statistics**', formatHash(stats), true)
-            .addField('**Combat**', `**HP:** ${data.hp.current}/${data.hp.max}\n**AC:** ${data.combat.ac}\n**Speed:** ${data.combat.speed}\n`, true)
+            .addField('**Combat**', `**HP:** ${data.hp.current}/${data.hp.max}\n**AC:** ${data.combat.ac}\n**Speed:** ${data.combat.speed}\n` +
+                `**Initiative:** ${data.initiative_bonus}\n**Size:** ${data.combat.size}\n`, true)
             .addBlankField()
             //Print a preview to the bio
             .addField('**Bio Preview**', data.bio_preview + "\n\nUse the `$readbio` command to continue reading.")
