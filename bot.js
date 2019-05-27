@@ -318,7 +318,7 @@ function printStats(character, message){
     loadData(BASE_PATH + '/pcs/'+ character + '.json').then(function(data){
         let embed = new Discord.RichEmbed()
             .setThumbnail('attachment://image.png')
-            .setTitle(`**${data.name}** - ${data.title} - (Level ${data.level} ${data.class})`)
+            .setTitle(`**${data.name}** - ${data.title} - (Level ${data.level} ${data.subclass})`)
             .setColor(data.color)
             .setDescription(`**HP:** ${data.hp.current}/${data.hp.max} · **AC:** ${data.combat.ac} · **Speed:** ${data.combat.speed}`);
         //Get the values for each main stat

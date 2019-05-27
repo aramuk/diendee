@@ -1,10 +1,10 @@
-#Dependencies
+# Dependencies
 node_modules
 package-lock.json
 
-#Keys
+# Keys
 auth.json
 
-#Character Data
+# Character Data
 diendee.png
 pcs
