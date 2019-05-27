@@ -272,6 +272,7 @@ function getStatValue(data, value) {
     return Math.floor((data.stats[value].value-10)/2);
 }
 
+// Checks if the specified value is a string or geyser
 function isSkill(value){
     for(key in skills){
         if(skills[key].includes(value)){
@@ -281,6 +282,7 @@ function isSkill(value){
     return false;
 }
 
+// Find the bonus value for a given stat
 function getSkillValue(data, skill, stat=undefined){
     if(!stat){
         for(key in skills){
