@@ -1,6 +1,7 @@
 //Dependencies
 const Discord = require("discord.js");
 const fs = require('fs-extra');
+const uuidv4 = require('uuid/v4');
 
 global.BASE_PATH = __dirname;
 const client = new Discord.Client();
@@ -10,6 +11,8 @@ const auth = require(BASE_PATH + '/auth.json');
 const mapping = require(BASE_PATH + '/data/mapping.json');
 const skills = require(BASE_PATH + '/data/skills.json');
 const levels = require(BASE_PATH + '/data/levels.json');
+var campaigns = require(BASE_PATH + '/data/campaigns.json');
+var guilds = require(BASE_PATH + '/data/guilds.json');
 
 //On bot start
 client.on("ready", function(){
@@ -28,6 +31,17 @@ client.on("message", function(message){
             //$hellothere
             case 'hellothere':
                 helloThere(message);
+                break;
+            //$campaign
+            case 'campaign':
+                getCampaign(message);
+                break;        
+            //$load
+            case 'load':
+                loadCampaign(message, args);
+                break;   
+            case 'start':
+                startCampaign();
                 break;
             //$roll
             case 'roll':
@@ -71,6 +85,47 @@ client.on("message", function(message){
         }
     }
 });
+
+function recacheCampaignJSON() {
+    delete require.cache[require.resolve(BASE_PATH + '/data/campaigns.json')];
+    campaigns = require(BASE_PATH + '/data/campaigns.json')
+}
+
+function recacheGuildJSON() {
+    delete require.cache[require.resolve(BASE_PATH + '/data/guilds.json')];
+    guilds = require(BASE_PATH + '/data/guilds.json')
+}
+
+function getCampaign(message) {
+    var server = message.channel.guild.id;
+    if(guilds[server]) {
+        var campaign = guilds[server];
+        message.channel.send('This guild is currently playing: _' + guilds[server].main.name + '_.');
+    } else {
+        message.channel.send('No campaign is associated with this guild. Type `$start [name]` to make one.'); 
+    }
+}
+
+function loadCampaign(message, args) {
+    if(args.length != 1) {
+        message.channel.send('You must specify a single campaign to load');
+        return;
+    }
+    var server = message.channel.guild.id;
+    var name = args[0].replace(/\_/g, ' ');
+    var history = guilds[server].all;
+    for(i = 0; i < history.length; i++) {
+        var entry = history[i];
+        if(campaigns[entry].name == name) {
+            guilds[server].main = campaigns[entry];
+            message.channel.send('I just loaded _' + campaigns[entry].name + '_ in this guild.');
+            return;
+        }
+    }
+    message.channel.send('I could not find a campaign named _' + name + '_ in this guild\'s history.');
+}
+
+
 
 //Responds to a comment $hellothere in the only acceptable way.
 function helloThere(message){
