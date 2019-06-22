@@ -1,7 +1,7 @@
 //Dependencies
 const Discord = require("discord.js");
 const fs = require('fs-extra');
-const uuidv4 = require('uuid/v4');
+const uuid = require('uuid/v4');
 
 global.BASE_PATH = __dirname;
 const client = new Discord.Client();
@@ -41,7 +41,7 @@ client.on("message", function(message){
                 loadCampaign(message, args);
                 break;   
             case 'start':
-                startCampaign();
+                startCampaign(message, args);
                 break;
             //$roll
             case 'roll':
@@ -123,6 +123,40 @@ function loadCampaign(message, args) {
         }
     }
     message.channel.send('I could not find a campaign named _' + name + '_ in this guild\'s history.');
+}
+
+function startCampaign(message, args) {
+    if(args.length != 1) {
+        message.channel.send('Please specify a name for the new campaign.');
+        return;
+    }
+    let name = args[0].replace(/\_/g, ' ');
+    const oldCampaigns = campaigns;
+    const oldGuilds = guilds;
+    var campaignUuid = uuid();
+    campaigns[campaignUuid] = {
+        "name": name,
+        "mapping": {}
+    }
+    fs.writeFile(BASE_PATH + '/data/campaigns.json',  JSON.stringify(campaigns, null, 4))
+    .then(function(){
+        guilds[message.channel.guild.id].all.push(campaignUuid);
+        fs.writeFile(BASE_PATH + '/data/guilds.json', JSON.stringify(guilds, null, 4))
+        .then(function(){
+            recacheCampaignJSON();
+            recacheGuildJSON();
+            message.channel.send(`_${name}_ has been added to this guild. Type \`$load ${args[0]}\` to load this campaign.`);
+        }).catch(function(err){
+            guilds = oldGuilds;
+            campaigns = oldCampaigns;
+            console.log('Error writing guilds:', err);
+            message.channel.send('Sorry. There was an error creating your campaign');
+        });
+    }).catch(function(err){
+        campaigns = oldCampaigns;
+        console.log('Error writing campagins:', err);
+        message.channel.send('Sorry. There was an error creating your campaign');
+    });
 }
 
 
