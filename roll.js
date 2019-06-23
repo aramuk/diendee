@@ -1,3 +1,8 @@
+const parseRoll = function(cmd) {
+    const RE = /^(\d*)(?:d(\d+))?$/;
+    return RE.exec(cmd);
+};
+
 /**
  * Rolls the specified die
  * @param {natural number} sides    The number of sides on the die
@@ -14,7 +19,7 @@ const rollDie = function(sides) {
  */
 const rollDice = function(dice, sides, dropLowest = false) {
     var roll = {
-        cmd: `${dice}d${sides}` + dropLowest ? " drop the lowest" : "",
+        cmd: `${dice}d${sides}` + (dropLowest ? " drop the lowest" : ""),
         total: 0,
         result: []
     };
@@ -52,4 +57,4 @@ function formatRolls(rolls) {
     return output;
 }
 
-module.exports = { rollDie, rollDice, rollPC, formatRolls };
+module.exports = { parseRoll, rollDie, rollDice, rollPC, formatRolls };

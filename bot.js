@@ -5,8 +5,15 @@ const uuid = require("uuid/v4");
 
 global.BASE_PATH = __dirname;
 const auth = require(BASE_PATH + "/auth.json");
-const { parseNat, formatHash, loadData } = require(BASE_PATH + "/utils.js");
-const { rollDie, rollDice, rollPC, formatRolls } = require(BASE_PATH + "/roll.js");
+const { parseNat, formatHash, loadData, formatArg } = require(BASE_PATH +
+    "/utils.js");
+const {
+    parseRoll,
+    rollDie,
+    rollDice,
+    rollPC,
+    formatRolls
+} = require(BASE_PATH + "/roll.js");
 
 const client = new Discord.Client();
 
@@ -234,87 +241,93 @@ function removePinnedMessages(message, start_text) {
     });
 }
 
-function roll(message, args) {
+async function handleRollCommand(cmd) {
+    cmd = formatArg(cmd);
+    if(isStat(cmd) || isSkill(cmd)) {
+        var result = rollDice(1, 20);
+        result.cmd = cmd;
+        result.total += getBonus(cmd)
+    }
+}
+
+async function roll(message, args) {
     if (args.length < 1) {
-        message.channel.send("Please specify die/dice to roll.");
+        message.channel.send("You must specify valid skill(s)/dice");
         return;
     }
-    let embed = new Discord.RichEmbed()
-        //Set thumbnail to Diendee's profile pic
-        .setThumbnail(client.user.displayAvatarURL)
-        //Set author to the person who requested the roll
-        .setAuthor(
-            message.author.username + " rolled: ",
-            message.author.displayAvatarURL
-        )
-        .setColor("#fcce63");
-    const RE = /^(\d*)(?:d(\d+))?$/;
-    var results = new Promise(function(resolve, reject) {
-        args.forEach(async function(arg) {
-            arg = arg.replace(/\./g, " ");
-            //Parse the roll commands and roll them
-            var pendingRolls = [];
-            var cmd = arg[0].toUpperCase() + arg.slice(1).toLowerCase();
-            if (isStat(cmd) || isSkill(cmd)) {
-                var bonus = await getRequestedValue(cmd, [
-                    mapping["u" + message.author.id]
-                ]);
-                bonus = parseInt(bonus[0].value);
-                var roll = rollDice(1, 20);
-                roll.total += bonus;
-                roll.rolls.push(bonus);
-                pendingRolls.push({ cmd: "d20+" + bonus, result: roll });
-            } else {
-                arg.split("+").forEach(function(inp) {
-                    cmds = RE.exec(inp);
-                    if (cmds) {
-                        var sides = parseNat(cmds[2]);
-                        var quant = parseNat(cmds[1]);
-                        pendingRolls.push({
-                            cmd: cmds[0],
-                            result:
-                                sides == 1
-                                    ? { total: quant, rolls: [quant] }
-                                    : rollDice(quant, sides)
-                        });
-                    } else {
-                        message.channel.send(
-                            genBasicEmbed(`Sorry, I could not roll _${inp}_.`)
-                        );
-                        resolve(false);
-                        return;
-                    }
-                });
-            }
-            //Print the results
-            const rolls = await Promise.all(pendingRolls);
-            if (rolls.length > 0) {
-                var total = 0;
-                rolls.forEach(function(roll) {
-                    total += roll.result.total;
-                });
-                embed.addField(
-                    `**${arg}**`,
-                    formatRolls(rolls) + `**Total: ${total}**\n`,
-                    true
-                );
-            }
-            resolve(true);
-        });
-    });
-    results
-        .then(function(send) {
-            if (send) {
-                message.channel.send(embed);
-            }
-        })
-        .catch(function(err) {
-            console.log("Error rolling dice");
-            message.channel.send(
-                genBasicEmbed("I ran into some trouble rolling those dice")
-            );
-        });
+    let results = await Promise.all(args.map(handleRollCommand));
 }
+
+// function roll(message, args) {
+//     if (args.length < 1) {
+//         message.channel.send("Please specify die/dice to roll.");
+//         return;
+//     }
+//     let embed = new Discord.RichEmbed()
+//         //Set thumbnail to Diendee's profile pic
+//         .setThumbnail(client.user.displayAvatarURL)
+//         //Set author to the person who requested the roll
+//         .setAuthor(
+//             message.author.username + " rolled: ",
+//             message.author.displayAvatarURL
+//         )
+//         .setColor("#fcce63");
+//     const RE = /^(\d*)(?:d(\d+))?$/;
+//     var results = new Promise(function(resolve, reject) {
+//         args.forEach(async function(arg) {
+//             arg = arg.replace(/\_/g, " ");
+//             //Parse the roll commands and roll them
+//             var pendingRolls = [];
+//             var cmd = arg[0].toUpperCase() + arg.slice(1).toLowerCase();
+//             if (isStat(cmd) || isSkill(cmd)) {
+//                 var bonus = await getRequestedValue(cmd, [
+//                     mapping["u" + message.author.id]
+//                 ]);
+//                 bonus = parseInt(bonus[0].value);
+//                 var roll = rollDice(1, 20);
+//                 roll.total += bonus;
+//                 roll.rolls.push(bonus);
+//                 pendingRolls.push({ cmd: "d20+" + bonus, result: roll });
+//             } else {
+//                 arg.split("+").forEach(function(inp) {
+//                     cmds = RE.exec(inp);
+//                     if (cmds) {
+//                         var sides = parseNat(cmds[2]);
+//                         var quant = parseNat(cmds[1]);
+//                         pendingRolls.push(rollDice(quant, sides));
+//                     } else {
+//                         message.channel.send(
+//                             genBasicEmbed(`Sorry, I could not roll _${inp}_.`)
+//                         );
+//                         resolve(false);
+//                         return;
+//                     }
+//                 });
+//             }
+//             //Print the results
+//             const rolls = await Promise.all(pendingRolls);
+//             if (rolls.length > 0) {
+//                 var total = 0;
+//                 rolls.forEach(function(roll) {
+//                     total += roll.total;
+//                 });
+//                 embed.addField(`**${arg}**`, formatRolls(rolls) + `**Total: ${total}**\n`,true);
+//             }
+//             resolve(true);
+//         });
+//     });
+//     results.then(function(send) {
+//         if (send) {
+//             message.channel.send(embed);
+//         }
+//     })
+//     .catch(function(err) {
+//         console.log("Error rolling dice", err);
+//         message.channel.send(
+//             genBasicEmbed("I ran into some trouble rolling those dice")
+//         );
+//     });
+// }
 
 //Print information about Diendee
 function about(message) {
