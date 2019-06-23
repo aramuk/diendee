@@ -4,8 +4,11 @@ const fs = require("fs-extra");
 const uuid = require("uuid/v4");
 
 global.BASE_PATH = __dirname;
-const client = new Discord.Client();
 const auth = require(BASE_PATH + "/auth.json");
+const { parseNat, formatHash, loadData } = require(BASE_PATH + "/utils.js");
+const { rollDie, rollDice, rollPC, formatRolls } = require(BASE_PATH + "/roll.js");
+
+const client = new Discord.Client();
 
 //D&D Data
 const mapping = require(BASE_PATH + "/data/mapping.json");
@@ -231,38 +234,6 @@ function removePinnedMessages(message, start_text) {
     });
 }
 
-//Converts a string to a Natural number; Returns 1 if there's an error
-function parseNat(val) {
-    val = parseInt(val);
-    if (!isNaN(val) && val > 0) {
-        return val;
-    }
-    return 1;
-}
-
-//Given a hash, return all key-value pairs in a single string, seperated by newlines
-function formatHash(hash) {
-    var output = ``;
-    for (key in hash) {
-        output += `**${key}:** ${hash[key]}\n`;
-    }
-    return output;
-}
-
-//Loads a JSON from memory
-function loadData(path) {
-    return new Promise(function(resolve, reject) {
-        fs.readFile(path, "utf-8", function(err, data) {
-            if (err) {
-                console.log("Error", err);
-                reject(err);
-            } else {
-                resolve(JSON.parse(data));
-            }
-        });
-    });
-}
-
 function roll(message, args) {
     if (args.length < 1) {
         message.channel.send("Please specify die/dice to roll.");
@@ -343,37 +314,6 @@ function roll(message, args) {
                 genBasicEmbed("I ran into some trouble rolling those dice")
             );
         });
-}
-
-//Rolls {dice}, each with {sides}
-function rollDice(dice, sides) {
-    var rolls = [];
-    for (d = 0; d < dice; d++) {
-        rolls.push(Math.floor(Math.random() * sides) + 1);
-    }
-    return { total: rolls.reduce((a, b) => a + b, 0), rolls: rolls };
-}
-
-//Turns a JSON of roll results into a string
-function formatRolls(rolls) {
-    output = "";
-    rolls.forEach(function(roll) {
-        output += `**${roll.cmd}:** ${
-            roll.result.total
-        } _(${roll.result.rolls.join(", ")})_\n`;
-    });
-    return output;
-}
-
-//Gets the index of the lowest value in the array
-function getMinIndex(rolls) {
-    var minI = 0;
-    for (m = 0; m < rolls.length; m++) {
-        if (rolls[m] < rolls[minI]) {
-            minI = m;
-        }
-    }
-    return minI;
 }
 
 //Print information about Diendee
