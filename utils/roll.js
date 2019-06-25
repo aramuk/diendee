@@ -1,21 +1,35 @@
+/**
+ * Matches to a roll command in string format
+ * @param {string} cmd      Some roll command
+ * @return {Object} null or an appropriate match object for the regex
+ */
 const parseRoll = function(cmd) {
-    const RE = /^(\d*)(?:d(\d+))?$/;
-    return RE.exec(cmd);
+    const rollRegex = /^(\d*)(?:d(\d+))?$/;
+    return rollRegex.exec(cmd);
 };
 
 /**
  * Rolls the specified die
- * @param {natural number} sides    The number of sides on the die
+ * @param {integer > 0} sides    The number of sides on the die
+ * @return {integer} in [1, sides]
  */
 const rollDie = function(sides) {
     return Math.floor(Math.random() * sides) + 1;
 };
 
 /**
+ * @typedef Roll
+ * @property {string} cmd           The command rolled
+ * @property {integer} total        The sum of all outcomes, accounting for drops
+ * @property {[integer,]} result    The list of all roll outcomes
+ */
+
+/**
  * Rolls the specified dice and returns the results & the sum
  * @param {natural number} dice        The number of dice to roll
  * @param {natural number} sides       The number of sides on said dice
  * @param {boolean} dropLowest     Optional; Removes total from the sum
+ * @return {Roll} Outcome of the desired roll
  */
 const rollDice = function(dice, sides, dropLowest = false) {
     var roll = {
@@ -32,7 +46,8 @@ const rollDice = function(dice, sides, dropLowest = false) {
 };
 
 /**
- * "4d6 drop the lowest", 6 times
+ * Rolls a PC
+ * @return {[Roll,]} "4d6 drop the lowest", 6 times
  */
 const rollPC = function() {
     var stats = [];
@@ -45,7 +60,7 @@ const rollPC = function() {
 /**
  * Turns an array of rolls into a string.
  * See rollDice() for an example of a roll
- * @param {object} rolls
+ * @param {[Roll,]} rolls
  */
 function formatRolls(rolls) {
     output = "";
@@ -55,6 +70,7 @@ function formatRolls(rolls) {
             ` _(${roll.result.join(", ")})_\n`;
     });
     return output;
+    ß;
 }
 
 module.exports = { parseRoll, rollDie, rollDice, rollPC, formatRolls };

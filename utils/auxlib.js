@@ -1,8 +1,10 @@
 const fs = require("fs-extra");
+const { parseRoll } = require("./roll");
 
 /**
  * Parses value to a natural number; Returns 1 if it's not a natural number
  * @param {*} val       Value to convert
+ * @return a natural number
  */
 const parseNat = function(val) {
     val = parseInt(val);
@@ -15,6 +17,7 @@ const parseNat = function(val) {
 /**
  * Given a hash, return all key-value pairs in a single string, seperated by newlines
  * @param {*} hash          The hash to print out
+ * @return a string representation of the hash
  */
 const formatHash = function(hash) {
     var output = ``;
@@ -27,6 +30,7 @@ const formatHash = function(hash) {
 /**
  * Loads a JSON from memory
  * @param {string} path     A path to the JSON
+ * @return some JSON
  */
 const loadData = function(path) {
     return new Promise(function(resolve, reject) {
@@ -43,17 +47,18 @@ const loadData = function(path) {
 
 /**
  * Reformats a command line arg as needed
- * @param {string} attr         The string to reformat
+ * @param {string} arg         The string to reformat
+ * @return {string} Reformatted argument
  */
-function formatArg(attr) {
-    attr = attr.replace(/\_/g, " ").toLowerCase();
-    switch (attr) {
+function formatArg(arg) {
+    arg = arg.replace(/\_/g, " ").toLowerCase();
+    switch (arg) {
         case "sleight of hand":
             return "Sleight of Hand";
-        case "animal handling":
-            return "Animal Handling";
+        case parseRoll(arg):
+            return parseRoll(arg);
         default:
-            return attr
+            return arg
                 .split(" ")
                 .map(s => s[0].toUpperCase() + s.slice(1))
                 .join(" ");
