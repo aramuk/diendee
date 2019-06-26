@@ -10,7 +10,7 @@ const {
     parseRoll,
     rollDie,
     rollDice,
-    rollPC,
+    rollCharacter,
     formatRolls
 } = require(BASE_PATH + "/utils/roll");
 
@@ -28,7 +28,7 @@ const {
 const client = new Discord.Client();
 
 //D&D Data
-const mapping = require(BASE_PATH + "/data/mapping.json");
+// const mapping = require(BASE_PATH + "/data/mapping.json");
 const skills = require(BASE_PATH + "/data/skills.json");
 const levels = require(BASE_PATH + "/data/levels.json");
 var campaigns = require(BASE_PATH + "/data/campaigns.json");
@@ -51,59 +51,58 @@ client.on("message", function(message) {
 
         //Commands to listen for
         switch (cmd) {
-            //$hellothere
+            // Easter Eggs
             case "hellothere":
                 helloThere(message);
                 break;
-            //$campaign
+            // Bot Details
+            case "about":
+                about(message);
+                break;
+            case "usage":
+                usage(message);
+                break;
+            // Campaign Management
             case "campaign":
                 getCampaign(message);
                 break;
-            //$load
             case "load":
                 loadCampaign(message, args);
                 break;
             case "start":
                 startCampaign(message, args);
                 break;
-            //$roll
+            // Rolls
             case "roll":
                 roll(message, args);
                 break;
-            //$about
-            case "about":
-                about(message);
+            case "rollpc":
+                rollPC(message);
                 break;
-            //$usage
-            case "usage":
-                usage(message);
+            case "check":
+                check(message, args);
                 break;
-            //$stats
+            case "initiative":
+                initiative(message, args);
+                break;
+            // View Character Info
             case "stats":
                 stats(message, args);
                 break;
-            //$get
             case "get":
                 get(message, args);
                 break;
-            //$bio
             case "bio":
                 bio(message, args);
                 break;
-            //$readbio
             case "readbio":
                 readbio(message, args);
                 break;
-            //$hp
             case "hp":
                 hp(message, args);
                 break;
             case "xp":
                 xp(message, args);
-                break;
-            //$initiative
-            case "initiative":
-                initiative(message, args);
                 break;
         }
     }
@@ -140,7 +139,7 @@ function loadCampaign(message, args) {
         message.channel.send("You must specify a single campaign to load");
         return;
     }
-    var server = message.channel.guild.id;
+    let server = message.channel.guild.id;
     var name = args[0].replace(/\_/g, " ");
     var history = guilds[server].all;
     for (i = 0; i < history.length; i++) {
@@ -253,10 +252,9 @@ function removePinnedMessages(message, start_text) {
 
 function roll(message, args) {
     if (args.length < 1) {
-        message.channel.send("You must specify valid skill(s)/dice");
+        message.channel.send("Please provide a valid roll command.");
         return;
     }
-
     try {
         let results = args.map(function handleRollArg(arg) {
             let cmds = arg.split("+");
@@ -295,9 +293,77 @@ function roll(message, args) {
     } catch (e) {
         console.log(`Error rolling: ${e}`);
         message.channel.send(
-            genBasicEmbed("Sorry I'm not quite sure how to roll that")
+            genBasicEmbed("Sorry, I'm not quite sure how to roll that.")
         );
     }
+}
+
+function rollPC(message) {
+    let embed = new Discord.RichEmbed()
+        .setThumbnail(client.user.displayAvatarURL)
+        .setAuthor(
+            message.author.username + " rolled: ",
+            message.author.displayAvatarURL
+        )
+        .setColor("#fcce63")
+        .addField("**New Character**:", formatRolls(rollCharacter()));
+    message.channel.send(embed);
+}
+
+async function check(message, args) {
+    if (message.channel.guild === null || message.channel.guild === undefined) {
+        return message.channel.send(
+            "I can not do that for you in a direct message channel."
+        );
+    }
+    let server = message.channel.guild.id;
+    if (!guilds.hasOwnProperty(server) || guilds[server].main === undefined) {
+        return message.channel.send(
+            "There doesn't appear to be an active campaign in this server."
+        );
+    }
+    let mapping = guilds[server].main.mapping;
+    let choice = formatArg(args[0]);
+    let playerId = "u" + message.author.id;
+    if (!mapping.hasOwnProperty(playerId)) {
+        return message.channel.send(
+            `I'm having some trouble finding a PC associated with ${
+                message.author.username
+            }`
+        );
+    } else if (!isSkill(choice) && !isStat(choice)) {
+        return message.channel.send(
+            `I'm not quite sure how to roll ${choice}.`
+        );
+    }
+    let path = `${BASE_PATH}/pcs/${mapping[playerId]}.json`;
+    loadData(path)
+        .then(function(data) {
+            const roll = rollDie(20);
+            const bonus = isStat(choice)
+                ? getBonus(data, choice)
+                : getSkillValue(data, choice);
+            var result = {
+                cmd: `d20+${bonus}`,
+                total: roll + bonus,
+                result: [roll]
+            };
+
+            let embed = new Discord.RichEmbed()
+                .setThumbnail(client.user.displayAvatarURL)
+                .setAuthor(
+                    message.author.username + " rolled: ",
+                    message.author.displayAvatarURL
+                )
+                .setColor("#fcce63")
+                .addField(`**${choice}**:`, formatRolls([result]));
+
+            message.channel.send(embed);
+        })
+        .catch(function(error) {
+            console.log(`ERROR rolling ${choice}:`, error);
+            message.channel.send(`I ran into some issues rolling ${choice}.`);
+        });
 }
 
 // function roll(message, args) {

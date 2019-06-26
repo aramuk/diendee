@@ -49,7 +49,7 @@ const rollDice = function(dice, sides, dropLowest = false) {
  * Rolls a PC
  * @return {[Roll,]} "4d6 drop the lowest", 6 times
  */
-const rollPC = function() {
+const rollCharacter = function() {
     var stats = [];
     for (var s = 0; s < 6; s++) {
         stats.push(rollDice(4, 6, true));
@@ -66,11 +66,11 @@ function formatRolls(rolls) {
     output = "";
     rolls.forEach(function(roll) {
         output +=
-            `**${roll.cmd}:** ${roll.total}` +
+            `**${roll.cmd}**: ${roll.total}` +
             ` _(${roll.result.join(", ")})_\n`;
     });
     return output;
     ß;
 }
 
-module.exports = { parseRoll, rollDie, rollDice, rollPC, formatRolls };
+module.exports = { parseRoll, rollDie, rollDice, rollCharacter, formatRolls };
