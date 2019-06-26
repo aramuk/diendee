@@ -52,17 +52,16 @@ const loadData = function(path) {
  */
 function formatArg(arg) {
     arg = arg.replace(/\_/g, " ").toLowerCase();
-    switch (arg) {
-        case "sleight of hand":
-            return "Sleight of Hand";
-        case parseRoll(arg):
-            return parseRoll(arg);
-        default:
-            return arg
-                .split(" ")
-                .map(s => s[0].toUpperCase() + s.slice(1))
-                .join(" ");
+    if (arg == "sleight of hand") {
+        return "Sleight of Hand";
+    } else if (parseRoll(arg)) {
+        console.log(parseRoll(arg));
+        return parseRoll(arg);
     }
+    return arg
+        .split(" ")
+        .map(s => s[0].toUpperCase() + s.slice(1))
+        .join(" ");
 }
 
 module.exports = { parseNat, formatHash, loadData, formatArg };

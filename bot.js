@@ -5,15 +5,25 @@ const uuid = require("uuid/v4");
 
 global.BASE_PATH = __dirname;
 const auth = require(BASE_PATH + "/auth.json");
-const { parseNat, formatHash, loadData, formatArg } = require(BASE_PATH +
-    "/utils.js");
+
 const {
     parseRoll,
     rollDie,
     rollDice,
     rollPC,
     formatRolls
-} = require(BASE_PATH + "/roll.js");
+} = require(BASE_PATH + "/utils/roll");
+
+const { parseNat, formatHash, loadData, formatArg } = require(BASE_PATH +
+    "/utils/auxlib");
+
+const {
+    isStat,
+    isSkill,
+    getBonus,
+    getStatValue,
+    getSkillValue
+} = require(BASE_PATH + "/utils/dndtools");
 
 const client = new Discord.Client();
 
@@ -241,21 +251,53 @@ function removePinnedMessages(message, start_text) {
     });
 }
 
-async function handleRollCommand(cmd) {
-    cmd = formatArg(cmd);
-    if(isStat(cmd) || isSkill(cmd)) {
-        var result = rollDice(1, 20);
-        result.cmd = cmd;
-        result.total += getBonus(cmd)
-    }
-}
-
-async function roll(message, args) {
+function roll(message, args) {
     if (args.length < 1) {
         message.channel.send("You must specify valid skill(s)/dice");
         return;
     }
-    let results = await Promise.all(args.map(handleRollCommand));
+
+    try {
+        let results = args.map(function handleRollArg(arg) {
+            let cmds = arg.split("+");
+            var total = 0;
+            return (
+                formatRolls(
+                    cmds.map(function handleRollCmd(cmd) {
+                        let match = parseRoll(cmd);
+                        if (match) {
+                            var result = rollDice(parseNat(match[1]), match[2]);
+                            total += result.total;
+                            return result;
+                        } else if (isNaN(cmd)) {
+                            return { cmd: cmd, total: 0, result: [] };
+                        }
+                        const val = parseInt(cmd);
+                        total += val;
+                        return { cmd: cmd, total: val, result: [val] };
+                    })
+                ) + `**Total**: ${total}`
+            );
+        });
+
+        let embed = new Discord.RichEmbed()
+            .setThumbnail(client.user.displayAvatarURL)
+            .setAuthor(
+                message.author.username + " rolled: ",
+                message.author.displayAvatarURL
+            )
+            .setColor("#fcce63");
+
+        for (var i = 0; i < results.length; i++) {
+            embed.addField(`**${args[i]}**`, results[i], true);
+        }
+        message.channel.send(embed);
+    } catch (e) {
+        console.log(`Error rolling: ${e}`);
+        message.channel.send(
+            genBasicEmbed("Sorry I'm not quite sure how to roll that")
+        );
+    }
 }
 
 // function roll(message, args) {
@@ -383,43 +425,6 @@ function usage(message) {
     message.channel.send(embed).then(function(message) {
         message.pin();
     });
-}
-
-function isStat(value) {
-    return skills.hasOwnProperty(value);
-}
-
-function getStatValue(data, value) {
-    return Math.floor((data.stats[value].value - 10) / 2);
-}
-
-// Checks if the specified value is a string or geyser
-function isSkill(value) {
-    for (key in skills) {
-        if (skills[key].includes(value)) {
-            return true;
-        }
-    }
-    return false;
-}
-
-// Find the bonus value for a given stat
-function getSkillValue(data, skill, stat = undefined) {
-    if (!stat) {
-        for (key in skills) {
-            if (skills[key].includes(skill)) {
-                stat = key;
-                break;
-            }
-        }
-    }
-    var val = Math.floor((data.stats[stat].value - 10) / 2);
-    if (data.stats[stat].proficiencies.hasOwnProperty(skill)) {
-        val += data.stats[stat].proficiencies[skill]
-            ? data.proficiency_bonus * 2
-            : data.proficiency_bonus;
-    }
-    return val;
 }
 
 //Print the requested stats

@@ -4,7 +4,7 @@
  * @return {Object} null or an appropriate match object for the regex
  */
 const parseRoll = function(cmd) {
-    const rollRegex = /^(\d*)(?:d(\d+))?$/;
+    const rollRegex = /^(\d*)(?:d(\d+))$/;
     return rollRegex.exec(cmd);
 };
 
