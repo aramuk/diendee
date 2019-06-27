@@ -62,7 +62,7 @@ const rollCharacter = function() {
  * See rollDice() for an example of a roll
  * @param {[Roll,]} rolls
  */
-function formatRolls(rolls) {
+const formatRolls = function(rolls) {
     output = "";
     rolls.forEach(function(roll) {
         output +=

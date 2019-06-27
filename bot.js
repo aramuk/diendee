@@ -6,6 +6,7 @@ const uuid = require("uuid/v4");
 global.BASE_PATH = __dirname;
 const auth = require(BASE_PATH + "/auth.json");
 
+// Local dependencies from /utils
 const {
     parseRoll,
     rollDie,
@@ -13,10 +14,8 @@ const {
     rollCharacter,
     formatRolls
 } = require(BASE_PATH + "/utils/roll");
-
 const { parseNat, formatHash, loadData, formatArg } = require(BASE_PATH +
     "/utils/auxlib");
-
 const {
     isStat,
     isSkill,
@@ -24,6 +23,13 @@ const {
     getStatValue,
     getSkillValue
 } = require(BASE_PATH + "/utils/dndtools");
+const {
+    genBasicEmbed,
+    removePinnedMessages,
+    about,
+    usage,
+    genFlavorText
+} = require(BASE_PATH + "/utils/diendee");
 
 const client = new Discord.Client();
 
@@ -107,6 +113,13 @@ client.on("message", function(message) {
         }
     }
 });
+
+//Responds to a comment $hellothere in the only acceptable way.
+function helloThere(message) {
+    message.channel.send(
+        "General Kenobi!\nYou are a bold one.\nhttps://www.youtube.com/watch?v=frszEJb0aOo"
+    );
+}
 
 function recacheCampaignJSON() {
     delete require.cache[require.resolve(BASE_PATH + "/data/campaigns.json")];
@@ -209,45 +222,10 @@ function startCampaign(message, args) {
         });
 }
 
-//Responds to a comment $hellothere in the only acceptable way.
-function helloThere(message) {
-    message.channel.send(
-        "General Kenobi!\nYou are a bold one.\nhttps://www.youtube.com/watch?v=frszEJb0aOo"
-    );
-}
-
 //Checks if a Discord user is permitted to use the command
 function isPermitted(uid) {
     return uid == 190515236434870272 || uid == 190355784859779073;
     // return uid != 190515236434870272
-}
-
-//Create a basic embed format for Diendee
-function genBasicEmbed(text) {
-    let embed = new Discord.RichEmbed()
-        .setThumbnail(client.user.displayAvatarURL)
-        .setTitle(`**${client.user.username} says:**`)
-        .setColor("#fcce63");
-    if (text) {
-        embed.setDescription(text);
-    }
-    return embed;
-}
-
-//Remove all pinned messages sent by Diendee that start with the specified text
-function removePinnedMessages(message, start_text) {
-    message.channel.fetchPinnedMessages().then(function(messages) {
-        messages = messages.array();
-        messages.forEach(function(mes) {
-            if (
-                mes.author.id == client.user.id &&
-                mes.embeds[0].description.substring(0, start_text.length) ==
-                    start_text
-            ) {
-                mes.unpin();
-            }
-        });
-    });
 }
 
 function roll(message, args) {
@@ -364,133 +342,6 @@ async function check(message, args) {
             console.log(`ERROR rolling ${choice}:`, error);
             message.channel.send(`I ran into some issues rolling ${choice}.`);
         });
-}
-
-// function roll(message, args) {
-//     if (args.length < 1) {
-//         message.channel.send("Please specify die/dice to roll.");
-//         return;
-//     }
-//     let embed = new Discord.RichEmbed()
-//         //Set thumbnail to Diendee's profile pic
-//         .setThumbnail(client.user.displayAvatarURL)
-//         //Set author to the person who requested the roll
-//         .setAuthor(
-//             message.author.username + " rolled: ",
-//             message.author.displayAvatarURL
-//         )
-//         .setColor("#fcce63");
-//     const RE = /^(\d*)(?:d(\d+))?$/;
-//     var results = new Promise(function(resolve, reject) {
-//         args.forEach(async function(arg) {
-//             arg = arg.replace(/\_/g, " ");
-//             //Parse the roll commands and roll them
-//             var pendingRolls = [];
-//             var cmd = arg[0].toUpperCase() + arg.slice(1).toLowerCase();
-//             if (isStat(cmd) || isSkill(cmd)) {
-//                 var bonus = await getRequestedValue(cmd, [
-//                     mapping["u" + message.author.id]
-//                 ]);
-//                 bonus = parseInt(bonus[0].value);
-//                 var roll = rollDice(1, 20);
-//                 roll.total += bonus;
-//                 roll.rolls.push(bonus);
-//                 pendingRolls.push({ cmd: "d20+" + bonus, result: roll });
-//             } else {
-//                 arg.split("+").forEach(function(inp) {
-//                     cmds = RE.exec(inp);
-//                     if (cmds) {
-//                         var sides = parseNat(cmds[2]);
-//                         var quant = parseNat(cmds[1]);
-//                         pendingRolls.push(rollDice(quant, sides));
-//                     } else {
-//                         message.channel.send(
-//                             genBasicEmbed(`Sorry, I could not roll _${inp}_.`)
-//                         );
-//                         resolve(false);
-//                         return;
-//                     }
-//                 });
-//             }
-//             //Print the results
-//             const rolls = await Promise.all(pendingRolls);
-//             if (rolls.length > 0) {
-//                 var total = 0;
-//                 rolls.forEach(function(roll) {
-//                     total += roll.total;
-//                 });
-//                 embed.addField(`**${arg}**`, formatRolls(rolls) + `**Total: ${total}**\n`,true);
-//             }
-//             resolve(true);
-//         });
-//     });
-//     results.then(function(send) {
-//         if (send) {
-//             message.channel.send(embed);
-//         }
-//     })
-//     .catch(function(err) {
-//         console.log("Error rolling dice", err);
-//         message.channel.send(
-//             genBasicEmbed("I ran into some trouble rolling those dice")
-//         );
-//     });
-// }
-
-//Print information about Diendee
-function about(message) {
-    var owner = client.users.get(auth.owner);
-    let embed = genBasicEmbed(
-        "Greetings adventurer!\nMy name is Diendee and I will aid you on your journey.\n\nType `" +
-            auth.prefix +
-            "usage` to learn how to talk to me!"
-    )
-        //Add signature to the bot.
-        .setFooter(
-            `This bot was created by ${owner.username}`,
-            owner.displayAvatarURL
-        );
-
-    message.channel.send(embed);
-}
-
-//Print information about using Diendee
-function usage(message) {
-    const message_text = "Here are some ways you can talk to me:";
-    //Remove old usage commands
-    removePinnedMessages(message, message_text);
-    //All the usage commands
-    let embed = genBasicEmbed(message_text)
-        .addField(`${auth.prefix}about`, "Learn about me!")
-        .addField(`${auth.prefix}usage`, "Learn how to talk to me!")
-        .addField(
-            `${auth.prefix}roll _[dice{+dice...}|attribute]_`,
-            "I'll roll the specified roll.\nRolls can be specifed as `$roll 2d6+d8+2d20`.\nYou can specify multiple rolls, just seperate them with a space like so: `$roll d20 2d6+5`.\nYou can also roll by attributes. Try `$roll Strength` to make a Strength check."
-        )
-        .addField(
-            `${auth.prefix}stats _{name ...}_`,
-            "I'll look up some stats for you. I'll look up yours if you don't specify character(s)."
-        )
-        .addField(
-            `${auth.prefix}bio _{name ...}_`,
-            "I'll to look up some bios. I'll look up yours if you don't specify character(s)."
-        )
-        .addField(
-            `${auth.prefix}readbio _{name ...}_`,
-            "I'll send you some adventurer(s)'s life story. I'll find yours if you don't specify character(s)."
-        )
-        .addField(
-            `${auth.prefix}get _attribute {name ...}_`,
-            "I'll tell you the proficiencies for a given stat. I'll look up yours if you don't specify character(s)."
-        )
-        .addField(
-            `${auth.prefix}initiative _{first.last:modifier ...}_`,
-            "I'll roll initiative for you and pin it to the channel. I can roll NPCs too if you give me their name and initiative modifier."
-        );
-    //Pin usage commands to the channel
-    message.channel.send(embed).then(function(message) {
-        message.pin();
-    });
 }
 
 //Print the requested stats
@@ -760,24 +611,6 @@ function sendFullBio(character, message) {
             }
         }
     );
-}
-
-//Generate some flavor text for Diendee to say before sending a bio
-function genFlavorText() {
-    //Get a random num and plug it into a switch
-    var num = Math.floor(Math.random() * 5) + 1;
-    switch (num) {
-        case 1:
-            return "You'd better get cozy. This is a long one.";
-        case 2:
-            return "A nice, quick read.";
-        case 3:
-            return "This one may take you a while. Good Luck!";
-        case 4:
-            return "Not much to learn here, I'm afraid, but you can take a look.";
-        case 5:
-            return "I hope you find what you are looking for.";
-    }
 }
 
 //Update the HP values of the requested characters

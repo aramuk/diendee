@@ -50,7 +50,7 @@ const loadData = function(path) {
  * @param {string} arg         The string to reformat
  * @return {string} Reformatted argument
  */
-function formatArg(arg) {
+const formatArg = function(arg) {
     arg = arg.replace(/\_/g, " ").toLowerCase();
     if (arg == "sleight of hand") {
         return "Sleight of Hand";
