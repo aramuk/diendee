@@ -1,11 +1,12 @@
 /* This file contains function used by diendee for basic 
     text channel communication with the users. */
+const Discord = require('discord.js');
 
 /**
  * Generates a default Diendee message
  * @param {String} text         The text for Diendee to send
  */
-const genBasicEmbed = function(text) {
+const genBasicEmbed = function(client, text) {
     let embed = new Discord.RichEmbed()
         .setThumbnail(client.user.displayAvatarURL)
         .setTitle(`**${client.user.username} says:**`)
@@ -21,7 +22,7 @@ const genBasicEmbed = function(text) {
  * @param {Message} message             The message that triggered this function
  * @param {String} start_text           The text in the embed to remove
  */
-const removePinnedMessages = function(message, start_text) {
+const removePinnedMessages = function(client, message, start_text) {
     message.channel.fetchPinnedMessages().then(function(messages) {
         messages = messages.array();
         messages.forEach(function(mes) {
@@ -40,7 +41,7 @@ const removePinnedMessages = function(message, start_text) {
  * Prints some information about Diendee
  * @param {Message} message         The message that triggered this function
  */
-const about = function(message) {
+const about = function(client, message) {
     var owner = client.users.get(auth.owner);
     let embed = genBasicEmbed(
         "Greetings adventurer!\nMy name is Diendee and I will aid you on your journey.\n\nType `" +
@@ -123,6 +124,5 @@ const genFlavorText = function() {
             return "I hope you find what you are looking for.";
     }
 }
-
 
 module.exports = { genBasicEmbed, removePinnedMessages, about, usage, genFlavorText };

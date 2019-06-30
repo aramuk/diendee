@@ -1,3 +1,5 @@
+const { loadData, capitalize } = require("./auxlib");
+
 /**
  * Matches to a roll command in string format
  * @param {string} cmd      Some roll command
@@ -70,7 +72,31 @@ const formatRolls = function(rolls) {
             ` _(${roll.result.join(", ")})_\n`;
     });
     return output;
-    ß;
-}
+};
 
-module.exports = { parseRoll, rollDie, rollDice, rollCharacter, formatRolls };
+const rollInitiative = function(pcs, filePath) {
+    return pcs.map(function(pc) {
+        return loadData(`${filePath}/${pc}.json`)
+            .then(function(data) {
+
+                return {
+                    character: capitalize(pc),
+                    // character: formatArg(pc),
+                    initiative: rollDie(20) + data.initiative_bonus
+                };
+            })
+            .catch(function(error) {
+                console.log(`Error loading data: ${error}`);
+                return { character: capitalize(pc), initiative: 'ERROR' };
+            });
+    });
+};
+
+module.exports = {
+    parseRoll,
+    rollDie,
+    rollDice,
+    rollCharacter,
+    formatRolls,
+    rollInitiative
+};

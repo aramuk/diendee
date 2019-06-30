@@ -1,5 +1,4 @@
 const fs = require("fs-extra");
-const { parseRoll } = require("./roll");
 
 /**
  * Parses value to a natural number; Returns 1 if it's not a natural number
@@ -46,22 +45,17 @@ const loadData = function(path) {
 };
 
 /**
- * Reformats a command line arg as needed
- * @param {string} arg         The string to reformat
- * @return {string} Reformatted argument
+ * Capitalizes each word in a string
+ * @param {string} arg          A string to capitalize
+ * @return {string} with all all first letters capitalized
  */
-const formatArg = function(arg) {
-    arg = arg.replace(/\_/g, " ").toLowerCase();
-    if (arg == "sleight of hand") {
-        return "Sleight of Hand";
-    } else if (parseRoll(arg)) {
-        console.log(parseRoll(arg));
-        return parseRoll(arg);
-    }
+const capitalize = function(arg) {
     return arg
+        .replace(/\_/g, " ")
+        .toLowerCase()
         .split(" ")
         .map(s => s[0].toUpperCase() + s.slice(1))
         .join(" ");
-}
+};
 
-module.exports = { parseNat, formatHash, loadData, formatArg };
+module.exports = { parseNat, formatHash, loadData, capitalize };

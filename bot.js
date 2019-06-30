@@ -4,32 +4,38 @@ const fs = require("fs-extra");
 const uuid = require("uuid/v4");
 
 global.BASE_PATH = __dirname;
-const auth = require(BASE_PATH + "/auth.json");
+const auth = require(`${BASE_PATH}/auth.json`);
 
 // Local dependencies from /utils
 const {
-    parseRoll,
-    rollDie,
-    rollDice,
-    rollCharacter,
-    formatRolls
-} = require(BASE_PATH + "/utils/roll");
-const { parseNat, formatHash, loadData, formatArg } = require(BASE_PATH +
-    "/utils/auxlib");
-const {
-    isStat,
-    isSkill,
-    getBonus,
-    getStatValue,
-    getSkillValue
-} = require(BASE_PATH + "/utils/dndtools");
+    parseNat,
+    formatHash,
+    loadData,
+    capitalize
+} = require(`${BASE_PATH}/utils/auxlib`);
 const {
     genBasicEmbed,
     removePinnedMessages,
     about,
     usage,
     genFlavorText
-} = require(BASE_PATH + "/utils/diendee");
+} = require(`${BASE_PATH}/utils/diendee`);
+const {
+    formatArg,
+    isStat,
+    isSkill,
+    getBonus,
+    getStatValue,
+    getSkillValue
+} = require(`${BASE_PATH}/utils/dndtools`);
+const {
+    parseRoll,
+    rollDie,
+    rollDice,
+    rollCharacter,
+    formatRolls,
+    rollInitiative
+} = require(`${BASE_PATH}/utils/roll`);
 
 const client = new Discord.Client();
 
@@ -63,7 +69,7 @@ client.on("message", function(message) {
                 break;
             // Bot Details
             case "about":
-                about(message);
+                about(client, message);
                 break;
             case "usage":
                 usage(message);
@@ -271,7 +277,7 @@ function roll(message, args) {
     } catch (e) {
         console.log(`Error rolling: ${e}`);
         message.channel.send(
-            genBasicEmbed("Sorry, I'm not quite sure how to roll that.")
+            genBasicEmbed(client, "Sorry, I'm not quite sure how to roll that.")
         );
     }
 }
@@ -421,6 +427,7 @@ function get(message, params) {
     if (params.length < 1) {
         message.channel.send(
             genBasicEmbed(
+                client,
                 `You must specify a value to get and optionally, which PCs to search.`
             )
         );
@@ -434,7 +441,7 @@ function get(message, params) {
     //Make sure supplied choice is valid
     if (!isSkill(choice) && !isStat(choice)) {
         message.channel.send(
-            genBasicEmbed(`I couldn't find a value named _${choice}_.`)
+            genBasicEmbed(client, `I couldn't find a value named _${choice}_.`)
         );
         return;
     }
@@ -453,6 +460,7 @@ function get(message, params) {
                 });
                 message.channel.send(
                     genBasicEmbed(
+                        client,
                         `Here are the values for _${choice}_:\n\n${output}`
                     )
                 );
@@ -560,7 +568,10 @@ function printBio(character, message) {
         })
         .catch(function(e) {
             message.channel.send(
-                genBasicEmbed(`I couldn't find a PC named ${character}.`)
+                genBasicEmbed(
+                    client,
+                    `I couldn't find a PC named ${character}.`
+                )
             );
             console.log(e);
         });
@@ -618,7 +629,7 @@ async function hp(message, params) {
     //Check to see if the user is authorized to use the command
     if (!isPermitted(message.author.id)) {
         message.channel.send(
-            genBasicEmbed("You are not authorized to use that command.")
+            genBasicEmbed(client, "You are not authorized to use that command.")
         );
         return;
     }
@@ -658,7 +669,7 @@ async function hp(message, params) {
     if (errors.length > 0) {
         description += "\nI ran into some trouble updating HP for " + errors;
     }
-    message.channel.send(genBasicEmbed(description));
+    message.channel.send(genBasicEmbed(client, description));
 }
 
 //Edits the HP of the requested characters
@@ -700,7 +711,7 @@ async function xp(message, params) {
     //Check to see if the user is authorized to use the command
     if (!isPermitted(message.author.id)) {
         message.channel.send(
-            genBasicEmbed("You are not authorized to use that command.")
+            genBasicEmbed(client, "You are not authorized to use that command.")
         );
         return;
     }
@@ -735,7 +746,7 @@ async function xp(message, params) {
     if (errors.length > 0) {
         description += "\nI ran into some trouble updating XP for " + errors;
     }
-    message.channel.send(genBasicEmbed(description));
+    message.channel.send(genBasicEmbed(client, description));
 }
 
 //Edits the XP of the requested characters
@@ -779,57 +790,41 @@ function editXP(path, value) {
 }
 
 //Roll for initiative and pin results to channel
-function initiative(message, npcs) {
-    const message_text = "Here are the initiative values: ";
-    removePinnedMessages(message, message_text); //Remove old pinned initiative values
-    getInitiativeRoll(npcs).then(function(vals) {
-        //Generate initiative values
-        //Format initiative rolls
-        output = "";
-        vals.forEach(function(elem) {
-            output += "**" + elem.name + "**: " + elem.initiative + "\n";
-        });
-        //Send the initiative values to the channel and pin them
-        message.channel
-            .send(genBasicEmbed(`${message_text}\n${output}`))
-            .then(function(message) {
-                message.pin();
-            });
-    });
-}
+async function initiative(message, npcs) {
+    let server = message.channel.guild.id;
+    const mapping = guilds[server].main.mapping;
 
-//Rolls initiative for all PCs and any requested NPCs
-async function getInitiativeRoll(npcs) {
-    var pcs = [];
-    for (key in mapping) {
-        pcs.push(mapping[key]);
-    }
-    const promises = pcs.map(async pc => {
-        const data = await loadData(BASE_PATH + "/pcs/" + pc + ".json");
-        return {
-            name: data.name,
-            initiative: rollDice(1, 20).total + data.initiative_bonus
-        };
-    });
-    const initiatives = await Promise.all(promises);
-    //Check to see if any NPCs were specifed and roll for them if applicable
-    if (npcs) {
-        npcs.forEach(function(npc) {
-            params = npc.replace(".", " ").split(/\:/g);
-            if (params.length == 2 && !isNaN(params[1])) {
-                params[1] = parseInt(params[1]);
-                initiatives.push({
-                    name: params[0],
-                    initiative: rollDice(1, 20).total + params[1]
+    Promise.all(rollInitiative(Object.values(mapping), `${BASE_PATH}/pcs`))
+        .then(function(rolls) {
+            if (npcs) {
+                npcs.forEach(function(npc) {
+                    const [name, bonus] = npc.split(/\:/g);
+                    rolls.push({
+                        character: capitalize(name),
+                        initiative: rollDie(20) + parseInt(bonus)
+                    });
                 });
             }
+            rolls.sort((a, b) => b.initiative - a.initiative);
+
+            const message_text = "Here are the initiative values: ";
+            removePinnedMessages(client, message, message_text); //Remove old pinned initiative values
+            const output = rolls
+                .map(roll => `**${roll.character}**: ${roll.initiative}`)
+                .join("\n");
+
+            message.channel
+                .send(genBasicEmbed(client, `${message_text}\n${output}`))
+                .then(function(message) {
+                    message.pin();
+                });
+        })
+        .catch(function(error) {
+            console.log("Error rolling pcs: ", error);
+            return message.channel.send(
+                "I ran into some errors rolling initiative"
+            );
         });
-    }
-    //Sort the initiative values least to greatest
-    initiatives.sort(function(a, b) {
-        return b.initiative - a.initiative;
-    });
-    return initiatives;
 }
 
 //Bot login
