@@ -1,24 +1,19 @@
 //Dependencies
-const Discord = require("discord.js");
-const fs = require("fs-extra");
-const uuid = require("uuid/v4");
+const Discord = require('discord.js');
+const fs = require('fs-extra');
+const uuid = require('uuid/v4');
 
 global.BASE_PATH = __dirname;
 const auth = require(`${BASE_PATH}/auth.json`);
 
 // Local dependencies from /utils
-const {
-    parseNat,
-    formatHash,
-    loadData,
-    capitalize
-} = require(`${BASE_PATH}/utils/auxlib`);
+const { parseNat, formatHash, loadData, capitalize } = require(`${BASE_PATH}/utils/auxlib`);
 const {
     genBasicEmbed,
     removePinnedMessages,
     about,
     usage,
-    genFlavorText
+    genFlavorText,
 } = require(`${BASE_PATH}/utils/diendee`);
 const {
     formatArg,
@@ -26,7 +21,7 @@ const {
     isSkill,
     getBonus,
     getStatValue,
-    getSkillValue
+    getSkillValue,
 } = require(`${BASE_PATH}/utils/dndtools`);
 const {
     parseRoll,
@@ -34,25 +29,23 @@ const {
     rollDice,
     rollCharacter,
     formatRolls,
-    rollInitiative
+    rollInitiative,
 } = require(`${BASE_PATH}/utils/roll`);
 
 const client = new Discord.Client();
 
 //D&D Data
 // const mapping = require(BASE_PATH + "/data/mapping.json");
-const skills = require(BASE_PATH + "/data/skills.json");
-const levels = require(BASE_PATH + "/data/levels.json");
-var campaigns = require(BASE_PATH + "/data/campaigns.json");
-var guilds = require(BASE_PATH + "/data/guilds.json");
+const skills = require(BASE_PATH + '/data/skills.json');
+const levels = require(BASE_PATH + '/data/levels.json');
+var campaigns = require(BASE_PATH + '/data/campaigns.json');
+var guilds = require(BASE_PATH + '/data/guilds.json');
 
 //On bot start
-client.on("ready", function() {
-    console.log("I am ready!");
-});
+client.on('ready', () => console.log('I am ready!'));
 
 //Listen for bot commands
-client.on("message", function(message) {
+client.on('message', message => {
     if (message.author.bot) return;
     if (message.content.substring(0, 1) == auth.prefix) {
         const args = message.content
@@ -64,56 +57,56 @@ client.on("message", function(message) {
         //Commands to listen for
         switch (cmd) {
             // Easter Eggs
-            case "hellothere":
+            case 'hellothere':
                 helloThere(message);
                 break;
             // Bot Details
-            case "about":
+            case 'about':
                 about(client, message);
                 break;
-            case "usage":
+            case 'usage':
                 usage(message);
                 break;
             // Campaign Management
-            case "campaign":
+            case 'campaign':
                 getCampaign(message);
                 break;
-            case "load":
+            case 'load':
                 loadCampaign(message, args);
                 break;
-            case "start":
+            case 'start':
                 startCampaign(message, args);
                 break;
             // Rolls
-            case "roll":
+            case 'roll':
                 roll(message, args);
                 break;
-            case "rollpc":
+            case 'rollpc':
                 rollPC(message);
                 break;
-            case "check":
+            case 'check':
                 check(message, args);
                 break;
-            case "initiative":
+            case 'initiative':
                 initiative(message, args);
                 break;
             // View Character Info
-            case "stats":
+            case 'stats':
                 stats(message, args);
                 break;
-            case "get":
+            case 'get':
                 get(message, args);
                 break;
-            case "bio":
+            case 'bio':
                 bio(message, args);
                 break;
-            case "readbio":
+            case 'readbio':
                 readbio(message, args);
                 break;
-            case "hp":
+            case 'hp':
                 hp(message, args);
                 break;
-            case "xp":
+            case 'xp':
                 xp(message, args);
                 break;
         }
@@ -123,18 +116,18 @@ client.on("message", function(message) {
 //Responds to a comment $hellothere in the only acceptable way.
 function helloThere(message) {
     message.channel.send(
-        "General Kenobi!\nYou are a bold one.\nhttps://www.youtube.com/watch?v=frszEJb0aOo"
+        'General Kenobi!\nYou are a bold one.\nhttps://www.youtube.com/watch?v=frszEJb0aOo'
     );
 }
 
 function recacheCampaignJSON() {
-    delete require.cache[require.resolve(BASE_PATH + "/data/campaigns.json")];
-    campaigns = require(BASE_PATH + "/data/campaigns.json");
+    delete require.cache[require.resolve(BASE_PATH + '/data/campaigns.json')];
+    campaigns = require(BASE_PATH + '/data/campaigns.json');
 }
 
 function recacheGuildJSON() {
-    delete require.cache[require.resolve(BASE_PATH + "/data/guilds.json")];
-    guilds = require(BASE_PATH + "/data/guilds.json");
+    delete require.cache[require.resolve(BASE_PATH + '/data/guilds.json')];
+    guilds = require(BASE_PATH + '/data/guilds.json');
 }
 
 function getCampaign(message) {
@@ -142,66 +135,54 @@ function getCampaign(message) {
     if (guilds[server]) {
         var campaign = guilds[server];
         message.channel.send(
-            "This guild is currently playing: _" +
-                guilds[server].main.name +
-                "_."
+            'This guild is currently playing: _' + guilds[server].main.name + '_.'
         );
     } else {
         message.channel.send(
-            "No campaign is associated with this guild. Type `$start [name]` to make one."
+            'No campaign is associated with this guild. Type `$start [name]` to make one.'
         );
     }
 }
 
 function loadCampaign(message, args) {
     if (args.length != 1) {
-        message.channel.send("You must specify a single campaign to load");
+        message.channel.send('You must specify a single campaign to load');
         return;
     }
     let server = message.channel.guild.id;
-    var name = args[0].replace(/\_/g, " ");
+    var name = args[0].replace(/\_/g, ' ');
     var history = guilds[server].all;
     for (i = 0; i < history.length; i++) {
         var entry = history[i];
         if (campaigns[entry].name == name) {
             guilds[server].main = campaigns[entry];
-            message.channel.send(
-                "I just loaded _" + campaigns[entry].name + "_ in this guild."
-            );
+            message.channel.send('I just loaded _' + campaigns[entry].name + '_ in this guild.');
             return;
         }
     }
     message.channel.send(
-        "I could not find a campaign named _" +
-            name +
-            "_ in this guild's history."
+        'I could not find a campaign named _' + name + "_ in this guild's history."
     );
 }
 
 function startCampaign(message, args) {
     if (args.length != 1) {
-        message.channel.send("Please specify a name for the new campaign.");
+        message.channel.send('Please specify a name for the new campaign.');
         return;
     }
-    let name = args[0].replace(/\_/g, " ");
+    let name = args[0].replace(/\_/g, ' ');
     const oldCampaigns = campaigns;
     const oldGuilds = guilds;
     var campaignUuid = uuid();
     campaigns[campaignUuid] = {
         name: name,
-        mapping: {}
+        mapping: {},
     };
-    fs.writeFile(
-        BASE_PATH + "/data/campaigns.json",
-        JSON.stringify(campaigns, null, 4)
-    )
-        .then(function() {
+    fs.writeFile(BASE_PATH + '/data/campaigns.json', JSON.stringify(campaigns, null, 4))
+        .then(() => {
             guilds[message.channel.guild.id].all.push(campaignUuid);
-            fs.writeFile(
-                BASE_PATH + "/data/guilds.json",
-                JSON.stringify(guilds, null, 4)
-            )
-                .then(function() {
+            fs.writeFile(BASE_PATH + '/data/guilds.json', JSON.stringify(guilds, null, 4))
+                .then(() => {
                     recacheCampaignJSON();
                     recacheGuildJSON();
                     message.channel.send(
@@ -210,21 +191,17 @@ function startCampaign(message, args) {
                         }\` to load this campaign.`
                     );
                 })
-                .catch(function(err) {
+                .catch(err => {
                     guilds = oldGuilds;
                     campaigns = oldCampaigns;
-                    console.log("Error writing guilds:", err);
-                    message.channel.send(
-                        "Sorry. There was an error creating your campaign"
-                    );
+                    console.log('Error writing guilds:', err);
+                    message.channel.send('Sorry. There was an error creating your campaign');
                 });
         })
-        .catch(function(err) {
+        .catch(err => {
             campaigns = oldCampaigns;
-            console.log("Error writing campagins:", err);
-            message.channel.send(
-                "Sorry. There was an error creating your campaign"
-            );
+            console.log('Error writing campagins:', err);
+            message.channel.send('Sorry. There was an error creating your campaign');
         });
 }
 
@@ -236,12 +213,11 @@ function isPermitted(uid) {
 
 function roll(message, args) {
     if (args.length < 1) {
-        message.channel.send("Please provide a valid roll command.");
-        return;
+        return message.channel.send('Please provide a valid roll command.');
     }
     try {
         let results = args.map(function handleRollArg(arg) {
-            let cmds = arg.split("+");
+            let cmds = arg.split('+');
             var total = 0;
             return (
                 formatRolls(
@@ -264,11 +240,8 @@ function roll(message, args) {
 
         let embed = new Discord.RichEmbed()
             .setThumbnail(client.user.displayAvatarURL)
-            .setAuthor(
-                message.author.username + " rolled: ",
-                message.author.displayAvatarURL
-            )
-            .setColor("#fcce63");
+            .setAuthor(message.author.username + ' rolled: ', message.author.displayAvatarURL)
+            .setColor('#fcce63');
 
         for (var i = 0; i < results.length; i++) {
             embed.addField(`**${args[i]}**`, results[i], true);
@@ -276,29 +249,22 @@ function roll(message, args) {
         message.channel.send(embed);
     } catch (e) {
         console.log(`Error rolling: ${e}`);
-        message.channel.send(
-            genBasicEmbed(client, "Sorry, I'm not quite sure how to roll that.")
-        );
+        message.channel.send(genBasicEmbed(client, "Sorry, I'm not quite sure how to roll that."));
     }
 }
 
 function rollPC(message) {
     let embed = new Discord.RichEmbed()
         .setThumbnail(client.user.displayAvatarURL)
-        .setAuthor(
-            message.author.username + " rolled: ",
-            message.author.displayAvatarURL
-        )
-        .setColor("#fcce63")
-        .addField("**New Character**:", formatRolls(rollCharacter()));
+        .setAuthor(message.author.username + ' rolled: ', message.author.displayAvatarURL)
+        .setColor('#fcce63')
+        .addField('**New Character**:', formatRolls(rollCharacter()));
     message.channel.send(embed);
 }
 
 async function check(message, args) {
     if (message.channel.guild === null || message.channel.guild === undefined) {
-        return message.channel.send(
-            "I can not do that for you in a direct message channel."
-        );
+        return message.channel.send('I can not do that for you in a direct message channel.');
     }
     let server = message.channel.guild.id;
     if (!guilds.hasOwnProperty(server) || guilds[server].main === undefined) {
@@ -308,45 +274,36 @@ async function check(message, args) {
     }
     let mapping = guilds[server].main.mapping;
     let choice = formatArg(args[0]);
-    let playerId = "u" + message.author.id;
+    let playerId = 'u' + message.author.id;
     if (!mapping.hasOwnProperty(playerId)) {
         return message.channel.send(
-            `I'm having some trouble finding a PC associated with ${
-                message.author.username
-            }`
+            `I'm having some trouble finding a PC associated with ${message.author.username}`
         );
     } else if (!isSkill(choice) && !isStat(choice)) {
-        return message.channel.send(
-            `I'm not quite sure how to roll ${choice}.`
-        );
+        return message.channel.send(`I'm not quite sure how to roll ${choice}.`);
     }
     let path = `${BASE_PATH}/pcs/${mapping[playerId]}.json`;
     loadData(path)
-        .then(function(data) {
+        .then(data => {
             const roll = rollDie(20);
-            const bonus = isStat(choice)
-                ? getBonus(data, choice)
-                : getSkillValue(data, choice);
+            const bonus = isStat(choice) ? getBonus(data, choice) : getSkillValue(data, choice);
             var result = {
                 cmd: `d20+${bonus}`,
                 total: roll + bonus,
-                result: [roll]
+                result: [roll],
             };
 
             let embed = new Discord.RichEmbed()
                 .setThumbnail(client.user.displayAvatarURL)
-                .setAuthor(
-                    message.author.username + " rolled: ",
-                    message.author.displayAvatarURL
-                )
-                .setColor("#fcce63")
+                .setAuthor(message.author.username + ' rolled: ', message.author.displayAvatarURL)
+                .setColor('#fcce63')
                 .addField(`**${choice}**:`, formatRolls([result]));
 
             message.channel.send(embed);
         })
-        .catch(function(error) {
+        .catch(error => {
             console.log(`ERROR rolling ${choice}:`, error);
-            message.channel.send(`I ran into some issues rolling ${choice}.`);
+            return message.channel.send(`I ran into some issues rolling ${choice}.`);
         });
 }
 
@@ -354,13 +311,11 @@ async function check(message, args) {
 function stats(message, characters) {
     //Print the stats of all the specified characters
     if (characters.length > 0) {
-        characters.forEach(function(character) {
-            printStats(character, message);
-        });
+        characters.forEach(character => printStats(character, message));
     }
     //If no character was specified, print the sender's character's stats
     else {
-        var pc = mapping["u" + message.author.id];
+        var pc = mapping['u' + message.author.id];
         printStats(pc, message);
     }
 }
@@ -368,14 +323,12 @@ function stats(message, characters) {
 //Prints the stats of the specified character
 function printStats(character, message) {
     //Load character data
-    loadData(BASE_PATH + "/pcs/" + character + ".json")
-        .then(function(data) {
+    loadData(BASE_PATH + '/pcs/' + character + '.json')
+        .then(data => {
             let embed = new Discord.RichEmbed()
-                .setThumbnail("attachment://image.png")
+                .setThumbnail('attachment://image.png')
                 .setTitle(
-                    `**${data.name}** - ${data.title} - (Level ${data.level} ${
-                        data.subclass
-                    })`
+                    `**${data.name}** - ${data.title} - (Level ${data.level} ${data.subclass})`
                 )
                 .setColor(data.color)
                 .setDescription(
@@ -386,52 +339,39 @@ function printStats(character, message) {
             //Get the values for each main stat
             for (key in data.stats) {
                 //Constitution has no associated skills
-                if (key == "Constitution") {
-                    embed.addField(
-                        `**${key}: ${data.stats[key].value}**`,
-                        "_None_",
-                        true
-                    );
+                if (key == 'Constitution') {
+                    embed.addField(`**${key}: ${data.stats[key].value}**`, '_None_', true);
                 } else {
                     var vals = {};
                     //Get the values for each proficiency within the main stat
-                    skills[key].forEach(function(skill) {
+                    skills[key].forEach(skill => {
                         vals[skill] = getSkillValue(data, skill, key);
                     });
                     //Add formatted values to the embed to be outputted
-                    embed.addField(
-                        `**${key}: ${data.stats[key].value}**`,
-                        formatHash(vals),
-                        true
-                    );
+                    embed.addField(`**${key}: ${data.stats[key].value}**`, formatHash(vals), true);
                 }
             }
             //Send values to the channel
             message.channel.send({
                 embed,
-                files: [
-                    { attachment: BASE_PATH + data.icon, name: "image.png" }
-                ]
+                files: [{ attachment: BASE_PATH + data.icon, name: 'image.png' }],
             });
         })
-        .catch(function(e) {
-            message.channel.send(
-                genBasicEmbed(`I couldn't find a PC named ${character}.`)
-            );
-            console.log(e);
+        .catch(err => {
+            console.log('Error getting stats:', err);
+            return message.channel.send(genBasicEmbed(`I couldn't find a PC named ${character}.`));
         });
 }
 
 function get(message, params) {
     //If there was no choice specified
     if (params.length < 1) {
-        message.channel.send(
+        return message.channel.send(
             genBasicEmbed(
                 client,
                 `You must specify a value to get and optionally, which PCs to search.`
             )
         );
-        return;
     }
 
     //Print the stats of all the specified characters
@@ -440,38 +380,30 @@ function get(message, params) {
 
     //Make sure supplied choice is valid
     if (!isSkill(choice) && !isStat(choice)) {
-        message.channel.send(
+        return message.channel.send(
             genBasicEmbed(client, `I couldn't find a value named _${choice}_.`)
         );
-        return;
     }
     //If no character was specified, print the sender's character's stats
     if (params.length == 0) {
-        params = [mapping["u" + message.author.id]];
+        params = [mapping['u' + message.author.id]];
     }
     getRequestedValue(choice, params, message)
-        .then(function(characters) {
+        .then(characters => {
             // Print all the requested stat values
             if (characters.length > 0) {
-                var output = "";
-                characters.forEach(function(character) {
-                    output +=
-                        "**" + character.name + "**: " + character.value + "\n";
-                });
+                var output = characters
+                    .map(character => `**${character.name}**: ${character.value}`)
+                    .join('\n');
                 message.channel.send(
-                    genBasicEmbed(
-                        client,
-                        `Here are the values for _${choice}_:\n\n${output}`
-                    )
+                    genBasicEmbed(client, `Here are the values for _${choice}_:\n\n${output}`)
                 );
             }
         })
-        .catch(function(error) {
-            console.log(error);
+        .catch(err => {
+            console.log('Error getting value:', err);
             message.channel.send(
-                genBasicEmbed(
-                    `I ran into some trouble getting ${choice} for ${params}`
-                )
+                genBasicEmbed(client, `I ran into some trouble getting ${choice} for ${params}`)
             );
         });
 }
@@ -480,14 +412,10 @@ function get(message, params) {
 async function getRequestedValue(value, characters) {
     //Find the stat value for each character
     promises = characters.map(async character => {
-        const data = await loadData(BASE_PATH + "/pcs/" + character + ".json");
+        const data = await loadData(BASE_PATH + '/pcs/' + character + '.json');
         return {
             name: data.name,
-            value: `${
-                isStat(value)
-                    ? getStatValue(data, value)
-                    : getSkillValue(data, value)
-            }`
+            value: `${isStat(value) ? getStatValue(data, value) : getSkillValue(data, value)}`,
         };
     });
     return await Promise.all(promises);
@@ -497,21 +425,19 @@ async function getRequestedValue(value, characters) {
 function bio(message, characters) {
     //Print the bios of all the specified characters
     if (characters.length > 0) {
-        characters.forEach(function(character) {
-            printBio(character, message);
-        });
+        characters.forEach(character => printBio(character, message));
     }
     //If no character was specified, print the sender's character's bio
     else {
-        var pc = mapping["u" + message.author.id];
+        var pc = mapping['u' + message.author.id];
         printBio(pc, message);
     }
 }
 
 //Prints the bio of a specified chracter
 function printBio(character, message) {
-    loadData(BASE_PATH + "/pcs/" + character + ".json")
-        .then(function(data) {
+    loadData(BASE_PATH + '/pcs/' + character + '.json')
+        .then(data => {
             var acct = client.users.get(data.player);
             var stats = {};
             for (key in data.stats) {
@@ -521,59 +447,41 @@ function printBio(character, message) {
             let embed = new Discord.RichEmbed()
                 .setAuthor(acct.username, acct.displayAvatarURL)
                 .setTitle(
-                    `**${data.name}** - ${data.title} - (Level ${data.level} ${
-                        data.subclass
-                    })`
+                    `**${data.name}** - ${data.title} - (Level ${data.level} ${data.subclass})`
                 )
                 //Character portrait
-                .setThumbnail("attachment://image.png")
+                .setThumbnail('attachment://image.png')
                 //Print character Stats
                 .setDescription(
-                    `**Total XP**: ${data.xp.total} · **XP to Next Lvl**: ${
-                        data.xp.next
-                    }`
+                    `**Total XP**: ${data.xp.total} · **XP to Next Lvl**: ${data.xp.next}`
                 )
                 //Print characteristics and statistics
+                .addField('**Characteristics**', formatHash(data.characteristics), true)
+                .addField('**Statistics**', formatHash(stats), true)
                 .addField(
-                    "**Characteristics**",
-                    formatHash(data.characteristics),
-                    true
-                )
-                .addField("**Statistics**", formatHash(stats), true)
-                .addField(
-                    "**Combat**",
+                    '**Combat**',
                     `**HP:** ${data.hp.current}/${data.hp.max}\n**AC:** ${
                         data.combat.ac
                     }\n**Speed:** ${data.combat.speed}\n` +
-                        `**Initiative:** ${data.initiative_bonus}\n**Size:** ${
-                            data.combat.size
-                        }\n`,
+                        `**Initiative:** ${data.initiative_bonus}\n**Size:** ${data.combat.size}\n`,
                     true
                 )
                 .addBlankField()
                 //Print a preview to the bio
                 .addField(
-                    "**Bio Preview**",
-                    data.bio_preview +
-                        "\n\nUse the `$readbio` command to continue reading."
+                    '**Bio Preview**',
+                    data.bio_preview + '\n\nUse the `$readbio` command to continue reading.'
                 )
                 .setColor(data.color);
 
             message.channel.send({
                 embed,
-                files: [
-                    { attachment: BASE_PATH + data.icon, name: "image.png" }
-                ]
+                files: [{ attachment: BASE_PATH + data.icon, name: 'image.png' }],
             });
         })
-        .catch(function(e) {
-            message.channel.send(
-                genBasicEmbed(
-                    client,
-                    `I couldn't find a PC named ${character}.`
-                )
-            );
-            console.log(e);
+        .catch(err => {
+            console.log('Error getting bio:', err);
+            message.channel.send(genBasicEmbed(client, `I couldn't find a PC named ${character}.`));
         });
 }
 
@@ -590,7 +498,7 @@ function readbio(message, characters) {
     }
     //If no character was specified, print the sender's character's bio
     else {
-        var pc = mapping["u" + message.author.id];
+        var pc = mapping['u' + message.author.id];
         sendFullBio(pc, message);
     }
 }
@@ -598,56 +506,50 @@ function readbio(message, characters) {
 //Sends the full bio of a character to the requester
 function sendFullBio(character, message) {
     //Read the full bio from a file
-    fs.readFile(
-        BASE_PATH + "/pcs/bios/" + character + ".txt",
-        "utf-8",
-        function(err, data) {
-            if (err) {
-                console.log("Error loading file: ", err);
-            } else {
-                paragraphs = data.split("\n\n");
-                //Add the title of the character's name
-                output = `**${paragraphs[0]}**\n\n`;
-                //Print each paragraph of the character's bio
-                for (p = 1; p < paragraphs.length; p++) {
-                    //Max message length for Discord is 2000, so split a paragraph if necessary
-                    if (output.length + paragraphs[p].length > 1970) {
-                        message.author.send(output);
-                        output = `\n`;
-                    }
-                    output += `${paragraphs[p]}\n\n`;
+    fs.readFile(`${BASE_PATH}/pcs/bios/${character}.txt`, 'utf-8', (err, data) => {
+        if (err) {
+            console.log('Error loading file: ', err);
+        } else {
+            paragraphs = data.split('\n\n');
+            //Add the title of the character's name
+            output = `**${paragraphs[0]}**\n\n`;
+            //Print each paragraph of the character's bio
+            for (p = 1; p < paragraphs.length; p++) {
+                //Max message length for Discord is 2000, so split a paragraph if necessary
+                if (output.length + paragraphs[p].length > 1970) {
+                    message.author.send(output);
+                    output = `\n`;
                 }
-                //Send the remaining part of the bio
-                message.author.send(`${output}`);
+                output += `${paragraphs[p]}\n\n`;
             }
+            //Send the remaining part of the bio
+            message.author.send(`${output}`);
         }
-    );
+    });
 }
 
 //Update the HP values of the requested characters
 async function hp(message, params) {
     //Check to see if the user is authorized to use the command
     if (!isPermitted(message.author.id)) {
-        message.channel.send(
-            genBasicEmbed(client, "You are not authorized to use that command.")
+        return message.channel.send(
+            genBasicEmbed(client, 'You are not authorized to use that command.')
         );
-        return;
     }
     //Check if all parameters were specified
     if (params.length < 1) {
-        message.channel.send("You must specify character(s) and a value.");
-        return;
+        return message.channel.send('You must specify character(s) and a value.');
     }
     //Get the amount to increment the hp by and check if its valid
     const results = params.map(async param => {
         var cmd = param.split(/\:/g);
         var val = parseInt(cmd[1]);
         //Check to see if the hp command is valid, before trying to update
-        if (cmd[1] == "max" || !isNaN(val)) {
-            if (cmd[1] == "max") {
+        if (cmd[1] == 'max' || !isNaN(val)) {
+            if (cmd[1] == 'max') {
                 val = cmd[1];
             }
-            var path = BASE_PATH + "/pcs/" + cmd[0].toLowerCase() + ".json";
+            var path = BASE_PATH + '/pcs/' + cmd[0].toLowerCase() + '.json';
             //Edit the HP and record whether it works
             return { pc: cmd[0], success: await editHP(path, val) };
         } else {
@@ -657,7 +559,7 @@ async function hp(message, params) {
     const pcs = await Promise.all(results);
     var success = [];
     var errors = [];
-    pcs.forEach(function(pc) {
+    pcs.forEach(pc => {
         if (pc.success) {
             success.push(pc.pc);
         } else {
@@ -665,9 +567,9 @@ async function hp(message, params) {
         }
     });
     //Confirm HP update
-    var description = "I updated HP for: " + success;
+    var description = 'I updated HP for: ' + success;
     if (errors.length > 0) {
-        description += "\nI ran into some trouble updating HP for " + errors;
+        description += '\nI ran into some trouble updating HP for ' + errors;
     }
     message.channel.send(genBasicEmbed(client, description));
 }
@@ -675,11 +577,11 @@ async function hp(message, params) {
 //Edits the HP of the requested characters
 function editHP(path, value) {
     //Load PC data if possible
-    return new Promise(function(resolve, reject) {
+    return new Promise((resolve, reject) => {
         loadData(path)
-            .then(function(data) {
+            .then(data => {
                 //Update the HP to the appropriate value
-                if (value == "max" || data.hp.current + value > data.hp.max) {
+                if (value == 'max' || data.hp.current + value > data.hp.max) {
                     data.hp.current = data.hp.max;
                 } else {
                     data.hp.current += value;
@@ -688,19 +590,17 @@ function editHP(path, value) {
                     }
                 }
                 //Write the updated data to the file
-                fs.writeFile(path, JSON.stringify(data, null, 4), function(
-                    err
-                ) {
+                fs.writeFile(path, JSON.stringify(data, null, 4), err => {
                     if (err) {
-                        console.log("Error writing JSON: ", err);
+                        console.log('Error writing JSON: ', err);
                         resolve(false);
                     } else {
                         resolve(true);
                     }
                 });
             })
-            .catch(function(err) {
-                console.log("Error editing hp", err);
+            .catch(err => {
+                console.log('Error editing hp:', err);
                 resolve(false);
             });
     });
@@ -710,22 +610,20 @@ function editHP(path, value) {
 async function xp(message, params) {
     //Check to see if the user is authorized to use the command
     if (!isPermitted(message.author.id)) {
-        message.channel.send(
-            genBasicEmbed(client, "You are not authorized to use that command.")
+        return message.channel.send(
+            genBasicEmbed(client, 'You are not authorized to use that command.')
         );
-        return;
     }
     //Check if all parameters were specified
     if (params.length < 1) {
-        message.channel.send("You must specify character(s) and a value.");
-        return;
+        return message.channel.send('You must specify character(s) and a value.');
     }
     var results = params.map(async param => {
         var cmd = param.split(/\:/g);
         var val = parseInt(cmd[1]);
         //Check to see if the xp value is valid, before trying to update
         if (!isNaN(val)) {
-            var path = BASE_PATH + "/pcs/" + cmd[0].toLowerCase() + ".json";
+            var path = BASE_PATH + '/pcs/' + cmd[0].toLowerCase() + '.json';
             return { pc: cmd[0], success: await editXP(path, val) };
         } else {
             return { pc: cmd[0], success: false };
@@ -734,7 +632,7 @@ async function xp(message, params) {
     const pcs = await Promise.all(results);
     var success = [];
     var errors = [];
-    pcs.forEach(function(pc) {
+    pcs.forEach(pc => {
         if (pc.success) {
             success.push(pc.pc);
         } else {
@@ -742,9 +640,9 @@ async function xp(message, params) {
         }
     });
     //Confirm XP update
-    var description = "I updated XP for: " + success;
+    var description = 'I updated XP for: ' + success;
     if (errors.length > 0) {
-        description += "\nI ran into some trouble updating XP for " + errors;
+        description += '\nI ran into some trouble updating XP for ' + errors;
     }
     message.channel.send(genBasicEmbed(client, description));
 }
@@ -752,9 +650,9 @@ async function xp(message, params) {
 //Edits the XP of the requested characters
 function editXP(path, value) {
     //Load PC data if possible
-    return new Promise(function(resolve, reject) {
+    return new Promise(resolve, reject => {
         loadData(path)
-            .then(function(data) {
+            .then(data => {
                 //Update the XP to the appropriate value; Change values if level up occurs
                 /* Known bugs
                 Can only gain 1 level at a time
@@ -771,19 +669,17 @@ function editXP(path, value) {
                 data.hp.hit_dice = data.level;
 
                 //Write the updated data to the file
-                fs.writeFile(path, JSON.stringify(data, null, 4), function(
-                    err
-                ) {
+                fs.writeFile(path, JSON.stringify(data, null, 4), err => {
                     if (err) {
-                        console.log("Error writing JSON: ", err);
+                        console.log('Error writing JSON: ', err);
                         resolve(false);
                     } else {
                         resolve(true);
                     }
                 });
             })
-            .catch(function(err) {
-                console.log("Error editing xp", err);
+            .catch(err => {
+                console.log('Error editing xp', err);
                 resolve(false);
             });
     });
@@ -795,35 +691,31 @@ async function initiative(message, npcs) {
     const mapping = guilds[server].main.mapping;
 
     Promise.all(rollInitiative(Object.values(mapping), `${BASE_PATH}/pcs`))
-        .then(function(rolls) {
+        .then(rolls => {
             if (npcs) {
-                npcs.forEach(function(npc) {
+                npcs.forEach(npc => {
                     const [name, bonus] = npc.split(/\:/g);
                     rolls.push({
                         character: capitalize(name),
-                        initiative: rollDie(20) + parseInt(bonus)
+                        initiative: rollDie(20) + parseInt(bonus),
                     });
                 });
             }
             rolls.sort((a, b) => b.initiative - a.initiative);
 
-            const message_text = "Here are the initiative values: ";
+            const message_text = 'Here are the initiative values: ';
             removePinnedMessages(client, message, message_text); //Remove old pinned initiative values
             const output = rolls
                 .map(roll => `**${roll.character}**: ${roll.initiative}`)
-                .join("\n");
+                .join('\n');
 
             message.channel
                 .send(genBasicEmbed(client, `${message_text}\n${output}`))
-                .then(function(message) {
-                    message.pin();
-                });
+                .then(message => message.pin());
         })
-        .catch(function(error) {
-            console.log("Error rolling pcs: ", error);
-            return message.channel.send(
-                "I ran into some errors rolling initiative"
-            );
+        .catch(err => {
+            console.log('Error rolling pcs: ', err);
+            return message.channel.send('I ran into some errors rolling initiative');
         });
 }
 

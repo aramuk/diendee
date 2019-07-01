@@ -1,11 +1,11 @@
-const { loadData, capitalize } = require("./auxlib");
+const { loadData, capitalize } = require('./auxlib');
 
 /**
  * Matches to a roll command in string format
  * @param {string} cmd      Some roll command
  * @return {Object} null or an appropriate match object for the regex
  */
-const parseRoll = function(cmd) {
+const parseRoll = cmd => {
     const rollRegex = /^(\d*)(?:d(\d+))$/;
     return rollRegex.exec(cmd);
 };
@@ -15,7 +15,7 @@ const parseRoll = function(cmd) {
  * @param {integer > 0} sides    The number of sides on the die
  * @return {integer} in [1, sides]
  */
-const rollDie = function(sides) {
+const rollDie = sides => {
     return Math.floor(Math.random() * sides) + 1;
 };
 
@@ -33,11 +33,11 @@ const rollDie = function(sides) {
  * @param {boolean} dropLowest     Optional; Removes total from the sum
  * @return {Roll} Outcome of the desired roll
  */
-const rollDice = function(dice, sides, dropLowest = false) {
+const rollDice = (dice, sides, dropLowest = false) => {
     var roll = {
-        cmd: `${dice}d${sides}` + (dropLowest ? " drop the lowest" : ""),
+        cmd: `${dice}d${sides}` + (dropLowest ? ' drop the lowest' : ''),
         total: 0,
-        result: []
+        result: [],
     };
     for (var d = 0; d < dice; d++) {
         roll.result.push(rollDie(sides));
@@ -51,12 +51,8 @@ const rollDice = function(dice, sides, dropLowest = false) {
  * Rolls a PC
  * @return {[Roll,]} "4d6 drop the lowest", 6 times
  */
-const rollCharacter = function() {
-    var stats = [];
-    for (var s = 0; s < 6; s++) {
-        stats.push(rollDice(4, 6, true));
-    }
-    return stats;
+const rollCharacter = () => {
+    return [1, 2, 3, 4, 5, 6].map(() => rollDice(4, 6, true));
 };
 
 /**
@@ -64,29 +60,29 @@ const rollCharacter = function() {
  * See rollDice() for an example of a roll
  * @param {[Roll,]} rolls
  */
-const formatRolls = function(rolls) {
-    output = "";
-    rolls.forEach(function(roll) {
-        output +=
-            `**${roll.cmd}**: ${roll.total}` +
-            ` _(${roll.result.join(", ")})_\n`;
-    });
-    return output;
+const formatRolls = rolls => {
+    return rolls
+        .map(roll => `**${roll.cmd}**: ${roll.total}` + ` _(${roll.result.join(', ')})_`)
+        .join('\n');
 };
 
-const rollInitiative = function(pcs, filePath) {
-    return pcs.map(function(pc) {
+/**
+ * Roll initiative
+ * @param {*} pcs           A list of PCs
+ * @param {*} filePath      The path to where that PC data is stored
+ * @return {Array}  An array of { character: NAME, initiative: ROLL }
+ */
+const rollInitiative = (pcs, filePath) => {
+    return pcs.map(pc => {
         return loadData(`${filePath}/${pc}.json`)
-            .then(function(data) {
-
+            .then(data => {
                 return {
                     character: capitalize(pc),
-                    // character: formatArg(pc),
-                    initiative: rollDie(20) + data.initiative_bonus
+                    initiative: rollDie(20) + data.initiative_bonus,
                 };
             })
-            .catch(function(error) {
-                console.log(`Error loading data: ${error}`);
+            .catch(err => {
+                console.log('Error loading data:', err);
                 return { character: capitalize(pc), initiative: 'ERROR' };
             });
     });
@@ -98,5 +94,5 @@ module.exports = {
     rollDice,
     rollCharacter,
     formatRolls,
-    rollInitiative
+    rollInitiative,
 };
