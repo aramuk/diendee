@@ -1,8 +1,8 @@
 {
     "name": "Lorem Ipsum",
-    "player": "(Insert Discord ID Here)",
+    "player": "(Insert Discord ID# Here)",
     "color": "#ffffff",
-    "icon": "(path to local file)",
+    "icon": "(Path to local file)",
     "title": "(Flavor Text)",
     "class": "(Fill-In)",
     "subclass": "(Fill-In)",
@@ -12,20 +12,20 @@
         "total": 0
     },
     "characteristics": {
-        "Gender": "Female",
-        "Height": "5' 5\"",
-        "Eyes": "Brown",
-        "Hair": "Brown",
-        "Age": "20",
-        "Race": "Human (Capshen)"
+        "Gender": "(Fill-In)",
+        "Height": "(Fill-In)",
+        "Eyes": "(Fill-In)",
+        "Hair": "(Fill-In)",
+        "Age": "(Fill-In)",
+        "Race": "(Fill-In)"
     },
     "combat": {
         "ac": 12,
         "initiative": 1,
         "speed": 30,
         "hp": {
-            "current": 12,
-            "max": 12
+            "current": 10,
+            "max": 10
         },
         "hit_dice": 1,
         "death_saves": {
@@ -41,54 +41,150 @@
         "total": 2
     },
     "stats": {
-        "Constitution": {
-            "value": 14,
-            "save": false,
-            "proficiencies": {}
-        },
         "Strength": {
-            "value": 15,
-            "save": true,
-            "proficiencies": {
-                "Athletics": false
-            }
-        },
-        "Intelligence": {
-            "value": 10,
-            "save": false,
-            "proficiencies": {}
-        },
-        "Wisdom": {
-            "value": 13,
-            "save": false,
-            "proficiencies": {
-                "Animal Handling": false,
-                "Perception": false,
-                "Insight": false,
-                "Survival": false
+            "score": 15,
+            "saves": true,
+            "skills": {
+                "Athletics": {
+                    "jack_of_all_trades": false,
+                    "proficient": true,
+                    "expertise:": false
+                }
             }
         },
         "Dexterity": {
-            "value": 12,
-            "save": false,
-            "proficiencies": {}
+            "score": 12,
+            "saves": false,
+            "skills": {
+                "Acrobatics": {
+                    "jack_of_all_trades": false,
+                    "proficient": false,
+                    "expertise:": false
+                },
+                "Sleight of Hand": {
+                    "jack_of_all_trades": false,
+                    "proficient": false,
+                    "expertise:": false
+                },
+                "Stealth": {
+                    "jack_of_all_trades": false,
+                    "proficient": false,
+                    "expertise:": false
+                }
+            }
+        },
+        "Constitution": {
+            "score": 14,
+            "saves": false,
+            "skills": {}
+        },
+        "Intelligence": {
+            "value": 10,
+            "saves": false,
+            "skills": {
+                "Arcana": {
+                    "jack_of_all_trades": false,
+                    "proficient": false,
+                    "expertise:": false
+                },
+                "History": {
+                    "jack_of_all_trades": false,
+                    "proficient": false,
+                    "expertise:": false
+                },
+                "Investigation": {
+                    "jack_of_all_trades": false,
+                    "proficient": false,
+                    "expertise:": false
+                },
+                "Nature": {
+                    "jack_of_all_trades": false,
+                    "proficient": false,
+                    "expertise:": false
+                },
+                "Religion": {
+                    "jack_of_all_trades": false,
+                    "proficient": false,
+                    "expertise:": false
+                }
+            }
+        },
+        "Wisdom": {
+            "value": 13,
+            "saves": false,
+            "skills": {
+                "Animal Handling": {
+                    "jack_of_all_trades": false,
+                    "proficient": true,
+                    "expertise:": false
+                },
+                "Insight": {
+                    "jack_of_all_trades": false,
+                    "proficient": false,
+                    "expertise:": false
+                },
+                "Medicine": {
+                    "jack_of_all_trades": false,
+                    "proficient": false,
+                    "expertise:": false
+                },
+                "Perception": {
+                    "jack_of_all_trades": false,
+                    "proficient": true,
+                    "expertise:": false
+                },
+                "Survival": {
+                    "jack_of_all_trades": false,
+                    "proficient": true,
+                    "expertise:": false
+                }
+            }
         },
         "Charisma": {
             "value": 8,
-            "save": false,
-            "proficiencies": {}
+            "saves": false,
+            "skills": {
+                "Deception": {
+                    "jack_of_all_trades": false,
+                    "proficient": false,
+                    "expertise:": false
+                },
+                "Intimidation": {
+                    "jack_of_all_trades": false,
+                    "proficient": false,
+                    "expertise:": false
+                },
+                "Performance": {
+                    "jack_of_all_trades": false,
+                    "proficient": false,
+                    "expertise:": false
+                },
+                "Persuasion": {
+                    "jack_of_all_trades": false,
+                    "proficient": false,
+                    "expertise:": false
+                }
+            }
         }
     },
     "items": [
         {
-            "name": "Sword",
+            "name": "Longsword",
+            "quantity": 1,
             "weight": 2,
-            "description": "(Fill-In)"
+            "description": "1d8 Slashing Damage; Versatile(1d10)"
         },
         {
             "name": "Shield",
-            "weight": 2,
-            "description": "(Fill-In)"
+            "quantity": 1,
+            "weight": 6,
+            "description": "+ 2 AC"
+        },
+        {
+            "name": "Scale Mail",
+            "quantity": 1,
+            "weight": 45,
+            "description": "AC becomes 14 + DEX (max 2). Disadvantage on stealth."
         }
     ],
     "bio_preview": "(More Flavor Text)"

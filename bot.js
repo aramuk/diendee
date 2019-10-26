@@ -120,12 +120,12 @@ function helloThere(message) {
     );
 }
 
-function recacheCampaignJSON() {
+const recacheCampaignJSON = () => {
     delete require.cache[require.resolve(BASE_PATH + '/data/campaigns.json')];
     campaigns = require(BASE_PATH + '/data/campaigns.json');
 }
 
-function recacheGuildJSON() {
+const recacheGuildJSON = () => {
     delete require.cache[require.resolve(BASE_PATH + '/data/guilds.json')];
     guilds = require(BASE_PATH + '/data/guilds.json');
 }

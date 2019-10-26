@@ -104,9 +104,7 @@ const usage = message => {
  * @return {string} Some flavor text
  */
 const genFlavorText = () => {
-    //Get a random num and plug it into a switch
-    var num = Math.floor(Math.random() * 5) + 1;
-    switch (num) {
+    switch (Math.floor(Math.random() * 5) + 1) {
         case 1:
             return "You'd better get cozy. This is a long one.";
         case 2:
