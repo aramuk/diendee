@@ -24,17 +24,18 @@ const {
     getSkillValue,
 } = require(`${BASE_PATH}/utils/dndtools`);
 const {
-    parseRoll,
     rollDie,
-    rollDice,
-    rollCharacter,
     formatRolls,
     rollInitiative,
-} = require(`${BASE_PATH}/utils/roll`);
+} = require(`${BASE_PATH}/utils/roller`);
+
+// Lambdas for each command
+const roll = require(`${BASE_PATH}/lambdas/rolling/roll`);
+const rollPC = require(`${BASE_PATH}/lambdas/rolling/rollPC`);
 
 const client = new Discord.Client();
 
-//D&D Data
+// D&D Data
 // const mapping = require(BASE_PATH + "/data/mapping.json");
 const skills = require(BASE_PATH + '/data/skills.json');
 const levels = require(BASE_PATH + '/data/levels.json');
@@ -79,10 +80,10 @@ client.on('message', message => {
                 break;
             // Rolls
             case 'roll':
-                roll(message, args);
+                roll(message, client, args);
                 break;
             case 'rollpc':
-                rollPC(message);
+                rollPC(message, client);
                 break;
             case 'check':
                 check(message, args);
@@ -123,12 +124,12 @@ function helloThere(message) {
 const recacheCampaignJSON = () => {
     delete require.cache[require.resolve(BASE_PATH + '/data/campaigns.json')];
     campaigns = require(BASE_PATH + '/data/campaigns.json');
-}
+};
 
 const recacheGuildJSON = () => {
     delete require.cache[require.resolve(BASE_PATH + '/data/guilds.json')];
     guilds = require(BASE_PATH + '/data/guilds.json');
-}
+};
 
 function getCampaign(message) {
     var server = message.channel.guild.id;
@@ -211,57 +212,6 @@ function isPermitted(uid) {
     // return uid != 190515236434870272
 }
 
-function roll(message, args) {
-    if (args.length < 1) {
-        return message.channel.send('Please provide a valid roll command.');
-    }
-    try {
-        let results = args.map(function handleRollArg(arg) {
-            let cmds = arg.split('+');
-            var total = 0;
-            return (
-                formatRolls(
-                    cmds.map(function handleRollCmd(cmd) {
-                        let match = parseRoll(cmd);
-                        if (match) {
-                            var result = rollDice(parseNat(match[1]), match[2]);
-                            total += result.total;
-                            return result;
-                        } else if (isNaN(cmd)) {
-                            return { cmd: cmd, total: 0, result: [] };
-                        }
-                        const val = parseInt(cmd);
-                        total += val;
-                        return { cmd: cmd, total: val, result: [val] };
-                    })
-                ) + `**Total**: ${total}`
-            );
-        });
-
-        let embed = new Discord.RichEmbed()
-            .setThumbnail(client.user.displayAvatarURL)
-            .setAuthor(message.author.username + ' rolled: ', message.author.displayAvatarURL)
-            .setColor('#fcce63');
-
-        for (var i = 0; i < results.length; i++) {
-            embed.addField(`**${args[i]}**`, results[i], true);
-        }
-        message.channel.send(embed);
-    } catch (e) {
-        console.log(`Error rolling: ${e}`);
-        message.channel.send(genBasicEmbed(client, "Sorry, I'm not quite sure how to roll that."));
-    }
-}
-
-function rollPC(message) {
-    let embed = new Discord.RichEmbed()
-        .setThumbnail(client.user.displayAvatarURL)
-        .setAuthor(message.author.username + ' rolled: ', message.author.displayAvatarURL)
-        .setColor('#fcce63')
-        .addField('**New Character**:', formatRolls(rollCharacter()));
-    message.channel.send(embed);
-}
-
 async function check(message, args) {
     if (message.channel.guild === null || message.channel.guild === undefined) {
         return message.channel.send('I can not do that for you in a direct message channel.');
@@ -332,9 +282,7 @@ function printStats(character, message) {
                 )
                 .setColor(data.color)
                 .setDescription(
-                    `**HP:** ${data.hp.current}/${data.hp.max} · **AC:** ${
-                        data.combat.ac
-                    } · **Speed:** ${data.combat.speed}`
+                    `**HP:** ${data.hp.current}/${data.hp.max} · **AC:** ${data.combat.ac} · **Speed:** ${data.combat.speed}`
                 );
             //Get the values for each main stat
             for (key in data.stats) {
@@ -460,9 +408,7 @@ function printBio(character, message) {
                 .addField('**Statistics**', formatHash(stats), true)
                 .addField(
                     '**Combat**',
-                    `**HP:** ${data.hp.current}/${data.hp.max}\n**AC:** ${
-                        data.combat.ac
-                    }\n**Speed:** ${data.combat.speed}\n` +
+                    `**HP:** ${data.hp.current}/${data.hp.max}\n**AC:** ${data.combat.ac}\n**Speed:** ${data.combat.speed}\n` +
                         `**Initiative:** ${data.initiative_bonus}\n**Size:** ${data.combat.size}\n`,
                     true
                 )

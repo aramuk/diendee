@@ -1,6 +1,6 @@
 const skills = require('../data/skills.json');
 const { capitalize } = require('./auxlib');
-const { parseRoll } = require('./roll');
+const { parseRoll } = require('./roller');
 
 /**
  * Reformats a command line arg as needed

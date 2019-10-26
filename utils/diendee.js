@@ -4,7 +4,8 @@ const Discord = require('discord.js');
 
 /**
  * Generates a default Diendee message
- * @param {String} text         The text for Diendee to send
+ * @param {Discord.Client} - Diendee Client Reference
+ * @param {String} text - The text for Diendee to send
  */
 const genBasicEmbed = (client, text) => {
     let embed = new Discord.RichEmbed()
@@ -13,6 +14,26 @@ const genBasicEmbed = (client, text) => {
         .setColor('#fcce63');
     if (text) {
         embed.setDescription(text);
+    }
+    return embed;
+};
+
+/**
+ * Generates a message tagged with a specific user
+ * @param {Discord.Client} client
+ * @param {Discord.User} author
+ * @param {String} title
+ * @param {String} fieldName
+ * @param {String} fieldValue
+ */
+const genAuthoredEmbed = (client, author, title, fieldName, fieldValue) => {
+    let embed = new Discord.RichEmbed()
+        .setThumbnail(client.user.displayAvatarURL)
+        .setAuthor(title, author.displayAvatarURL)
+        .setColor('#fcce63');
+
+    if (fieldName && fieldValue) {
+        embed.addField(fieldName, fieldValue);
     }
     return embed;
 };
@@ -118,4 +139,11 @@ const genFlavorText = () => {
     }
 };
 
-module.exports = { genBasicEmbed, removePinnedMessages, about, usage, genFlavorText };
+module.exports = {
+    genBasicEmbed,
+    genAuthoredEmbed,
+    removePinnedMessages,
+    about,
+    usage,
+    genFlavorText,
+};
