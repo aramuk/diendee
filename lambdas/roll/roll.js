@@ -35,7 +35,11 @@ const roll = (client, message, args) => {
             );
         });
 
-        let embed = genAuthoredEmbed(client, message.author, `${message.author.username} rolled: `);
+        let embed = genAuthoredEmbed(
+            client.user.displayAvatarURL,
+            message.author,
+            `${message.author.username} rolled: `
+        );
         for (var i = 0; i < results.length; i++) {
             embed.addField(`**${args[i]}**`, results[i], true);
         }

@@ -8,12 +8,11 @@ const { genAuthoredEmbed } = require('../../utils/diendee');
  */
 const rollPC = (client, message) => {
     let embed = genAuthoredEmbed(
-        client,
+        client.user.displayAvatarURL,
         message.author,
-        `${message.author.username} rolled: `,
-        '**New Character**:',
-        formatRolls(rollCharacter())
-    );
+        `${message.author.username} rolled: `
+    ).addField('**New Character**:', formatRolls(rollCharacter()));
+
     message.channel.send(embed);
 };
 

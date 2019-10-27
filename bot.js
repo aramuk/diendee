@@ -7,7 +7,7 @@ global.BASE_PATH = __dirname;
 const auth = require(`${BASE_PATH}/auth.json`);
 
 // Local dependencies from /utils
-const { formatHash, loadData, capitalize } = require(`${BASE_PATH}/utils/auxlib`);
+const { formatObj, loadData, capitalize } = require(`${BASE_PATH}/utils/auxlib`);
 const {
     genBasicEmbed,
     removePinnedMessages,
@@ -21,17 +21,14 @@ const {
     getStatValue,
     getSkillValue,
 } = require(`${BASE_PATH}/utils/dndtools`);
-const {
-    rollDie,
-    formatRolls,
-    rollInitiative,
-} = require(`${BASE_PATH}/utils/roller`);
+const { rollDie, formatRolls, rollInitiative } = require(`${BASE_PATH}/utils/roller`);
 
 // Lambdas for each command
 const about = require(`${BASE_PATH}/lambdas/about/about`);
 const usage = require(`${BASE_PATH}/lambdas/about/usage`);
 const roll = require(`${BASE_PATH}/lambdas/roll/roll`);
 const rollPC = require(`${BASE_PATH}/lambdas/roll/rollPC`);
+const bio = require(`${BASE_PATH}/lambdas/characters/bio`);
 
 const client = new Discord.Client();
 
@@ -99,7 +96,7 @@ client.on('message', message => {
                 get(message, args);
                 break;
             case 'bio':
-                bio(message, args);
+                bio(client, message, args);
                 break;
             case 'readbio':
                 readbio(message, args);
@@ -296,7 +293,7 @@ function printStats(character, message) {
                         vals[skill] = getSkillValue(data, skill, key);
                     });
                     //Add formatted values to the embed to be outputted
-                    embed.addField(`**${key}: ${data.stats[key].value}**`, formatHash(vals), true);
+                    embed.addField(`**${key}: ${data.stats[key].value}**`, formatObj(vals), true);
                 }
             }
             //Send values to the channel
@@ -367,68 +364,6 @@ async function getRequestedValue(value, characters) {
         };
     });
     return await Promise.all(promises);
-}
-
-//Print the requested bios.
-function bio(message, characters) {
-    //Print the bios of all the specified characters
-    if (characters.length > 0) {
-        characters.forEach(character => printBio(character, message));
-    }
-    //If no character was specified, print the sender's character's bio
-    else {
-        var pc = mapping['u' + message.author.id];
-        printBio(pc, message);
-    }
-}
-
-//Prints the bio of a specified chracter
-function printBio(character, message) {
-    loadData(BASE_PATH + '/pcs/' + character + '.json')
-        .then(data => {
-            var acct = client.users.get(data.player);
-            var stats = {};
-            for (key in data.stats) {
-                stats[key] = data.stats[key].value;
-            }
-
-            let embed = new Discord.RichEmbed()
-                .setAuthor(acct.username, acct.displayAvatarURL)
-                .setTitle(
-                    `**${data.name}** - ${data.title} - (Level ${data.level} ${data.subclass})`
-                )
-                //Character portrait
-                .setThumbnail('attachment://image.png')
-                //Print character Stats
-                .setDescription(
-                    `**Total XP**: ${data.xp.total} · **XP to Next Lvl**: ${data.xp.next}`
-                )
-                //Print characteristics and statistics
-                .addField('**Characteristics**', formatHash(data.characteristics), true)
-                .addField('**Statistics**', formatHash(stats), true)
-                .addField(
-                    '**Combat**',
-                    `**HP:** ${data.hp.current}/${data.hp.max}\n**AC:** ${data.combat.ac}\n**Speed:** ${data.combat.speed}\n` +
-                        `**Initiative:** ${data.initiative_bonus}\n**Size:** ${data.combat.size}\n`,
-                    true
-                )
-                .addBlankField()
-                //Print a preview to the bio
-                .addField(
-                    '**Bio Preview**',
-                    data.bio_preview + '\n\nUse the `$readbio` command to continue reading.'
-                )
-                .setColor(data.color);
-
-            message.channel.send({
-                embed,
-                files: [{ attachment: BASE_PATH + data.icon, name: 'image.png' }],
-            });
-        })
-        .catch(err => {
-            console.log('Error getting bio:', err);
-            message.channel.send(genBasicEmbed(client, `I couldn't find a PC named ${character}.`));
-        });
 }
 
 //Dms the bio of the specified characters to the requester

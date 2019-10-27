@@ -4,8 +4,8 @@ const { parseRoll } = require('./roller');
 
 /**
  * Reformats a command line arg as needed
- * @param {string} arg         The string to reformat
- * @return {string} Reformatted argument
+ * @param {string} arg - The string to reformat
+ * @return {string}- Reformatted argument
  */
 const formatArg = arg => {
     arg = arg.replace(/\_/g, ' ').toLowerCase();

@@ -27,6 +27,7 @@
             "current": 10,
             "max": 10
         },
+        "temp_hp": 0,
         "hit_dice": 1,
         "death_saves": {
             "successes": 0,
@@ -79,7 +80,7 @@
             "skills": {}
         },
         "Intelligence": {
-            "value": 10,
+            "score": 10,
             "saves": false,
             "skills": {
                 "Arcana": {
@@ -110,7 +111,7 @@
             }
         },
         "Wisdom": {
-            "value": 13,
+            "score": 13,
             "saves": false,
             "skills": {
                 "Animal Handling": {
@@ -141,7 +142,7 @@
             }
         },
         "Charisma": {
-            "value": 8,
+            "score": 8,
             "saves": false,
             "skills": {
                 "Deception": {

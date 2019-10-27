@@ -23,19 +23,12 @@ const genBasicEmbed = (client, text) => {
  * @param {Discord.Client} client
  * @param {Discord.User} author
  * @param {String} title
- * @param {String} fieldName
- * @param {String} fieldValue
  */
-const genAuthoredEmbed = (client, author, title, fieldName, fieldValue) => {
-    let embed = new Discord.RichEmbed()
-        .setThumbnail(client.user.displayAvatarURL)
+const genAuthoredEmbed = (thumbnail, author, title) => {
+    return new Discord.RichEmbed()
+        .setThumbnail(thumbnail)
         .setAuthor(title, author.displayAvatarURL)
         .setColor('#fcce63');
-
-    if (fieldName && fieldValue) {
-        embed.addField(fieldName, fieldValue);
-    }
-    return embed;
 };
 
 /**

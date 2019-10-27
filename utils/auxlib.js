@@ -14,19 +14,19 @@ const parseNat = val => {
 };
 
 /**
- * Given a hash, return all key-value pairs in a single string, seperated by newlines
- * @param {*} hash          The hash to print out
- * @return a string representation of the hash
+ * Given a JS object, return all key-value pairs in a single string, seperated by newlines
+ * @param {*} obj - The object to format
+ * @return a string representation of the object
  */
-const formatHash = hash => {
-    return Object.keys(hash)
-        .map(`**${key}**: ${hash[key]}`)
+const formatObj = obj => {
+    return Object.entries(obj)
+        .map(entry => `**${entry[0]}**: ${entry[1]}`)
         .join('\n');
 };
 
 /**
  * Loads a JSON from memory
- * @param {string} path     A path to the JSON
+ * @param {string} path - A path to the JSON
  * @return some JSON
  */
 const loadData = path => {
@@ -44,7 +44,7 @@ const loadData = path => {
 
 /**
  * Capitalizes each word in a string
- * @param {string} arg          A string to capitalize
+ * @param {string} arg - A string to capitalize
  * @return {string} with all all first letters capitalized
  */
 const capitalize = arg => {
@@ -56,4 +56,4 @@ const capitalize = arg => {
         .join(' ');
 };
 
-module.exports = { parseNat, formatHash, loadData, capitalize };
+module.exports = { parseNat, formatObj, loadData, capitalize };
