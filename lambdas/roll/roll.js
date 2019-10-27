@@ -4,11 +4,11 @@ const { genBasicEmbed, genAuthoredEmbed } = require('../../utils/diendee');
 
 /**
  * Rolls requested dice
+ * @param {Discord.Client} - Diendee Client reference
  * @param {Discord.Message} message - The message where the roll was requested
- * @param {Discord.Client} - Diendee Client Reference
  * @param {Array} args - Dice to be rolled
  */
-const roll = (message, client, args) => {
+const roll = (client, message, args) => {
     if (args.length < 1) {
         return message.channel.send('Please provide a valid roll command.');
     }

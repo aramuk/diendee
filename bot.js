@@ -7,12 +7,10 @@ global.BASE_PATH = __dirname;
 const auth = require(`${BASE_PATH}/auth.json`);
 
 // Local dependencies from /utils
-const { parseNat, formatHash, loadData, capitalize } = require(`${BASE_PATH}/utils/auxlib`);
+const { formatHash, loadData, capitalize } = require(`${BASE_PATH}/utils/auxlib`);
 const {
     genBasicEmbed,
     removePinnedMessages,
-    about,
-    usage,
     genFlavorText,
 } = require(`${BASE_PATH}/utils/diendee`);
 const {
@@ -30,8 +28,10 @@ const {
 } = require(`${BASE_PATH}/utils/roller`);
 
 // Lambdas for each command
-const roll = require(`${BASE_PATH}/lambdas/rolling/roll`);
-const rollPC = require(`${BASE_PATH}/lambdas/rolling/rollPC`);
+const about = require(`${BASE_PATH}/lambdas/about/about`);
+const usage = require(`${BASE_PATH}/lambdas/about/usage`);
+const roll = require(`${BASE_PATH}/lambdas/roll/roll`);
+const rollPC = require(`${BASE_PATH}/lambdas/roll/rollPC`);
 
 const client = new Discord.Client();
 
@@ -66,7 +66,7 @@ client.on('message', message => {
                 about(client, message);
                 break;
             case 'usage':
-                usage(message);
+                usage(client, message);
                 break;
             // Campaign Management
             case 'campaign':
@@ -80,10 +80,10 @@ client.on('message', message => {
                 break;
             // Rolls
             case 'roll':
-                roll(message, client, args);
+                roll(client, message, args);
                 break;
             case 'rollpc':
-                rollPC(message, client);
+                rollPC(client, message);
                 break;
             case 'check':
                 check(message, args);
