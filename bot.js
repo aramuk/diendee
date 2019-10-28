@@ -29,6 +29,7 @@ const usage = require(`${BASE_PATH}/lambdas/about/usage`);
 const roll = require(`${BASE_PATH}/lambdas/roll/roll`);
 const rollPC = require(`${BASE_PATH}/lambdas/roll/rollPC`);
 const bio = require(`${BASE_PATH}/lambdas/characters/bio`);
+const stats = require(`${BASE_PATH}/lambdas/characters/stats`);
 
 const client = new Discord.Client();
 
@@ -90,7 +91,7 @@ client.on('message', message => {
                 break;
             // View Character Info
             case 'stats':
-                stats(message, args);
+                stats(client, message, args);
                 break;
             case 'get':
                 get(message, args);
@@ -251,60 +252,6 @@ async function check(message, args) {
         .catch(error => {
             console.log(`ERROR rolling ${choice}:`, error);
             return message.channel.send(`I ran into some issues rolling ${choice}.`);
-        });
-}
-
-//Print the requested stats
-function stats(message, characters) {
-    //Print the stats of all the specified characters
-    if (characters.length > 0) {
-        characters.forEach(character => printStats(character, message));
-    }
-    //If no character was specified, print the sender's character's stats
-    else {
-        var pc = mapping['u' + message.author.id];
-        printStats(pc, message);
-    }
-}
-
-//Prints the stats of the specified character
-function printStats(character, message) {
-    //Load character data
-    loadData(BASE_PATH + '/pcs/' + character + '.json')
-        .then(data => {
-            let embed = new Discord.RichEmbed()
-                .setThumbnail('attachment://image.png')
-                .setTitle(
-                    `**${data.name}** - ${data.title} - (Level ${data.level} ${data.subclass})`
-                )
-                .setColor(data.color)
-                .setDescription(
-                    `**HP:** ${data.hp.current}/${data.hp.max} · **AC:** ${data.combat.ac} · **Speed:** ${data.combat.speed}`
-                );
-            //Get the values for each main stat
-            for (key in data.stats) {
-                //Constitution has no associated skills
-                if (key == 'Constitution') {
-                    embed.addField(`**${key}: ${data.stats[key].value}**`, '_None_', true);
-                } else {
-                    var vals = {};
-                    //Get the values for each proficiency within the main stat
-                    skills[key].forEach(skill => {
-                        vals[skill] = getSkillValue(data, skill, key);
-                    });
-                    //Add formatted values to the embed to be outputted
-                    embed.addField(`**${key}: ${data.stats[key].value}**`, formatObj(vals), true);
-                }
-            }
-            //Send values to the channel
-            message.channel.send({
-                embed,
-                files: [{ attachment: BASE_PATH + data.icon, name: 'image.png' }],
-            });
-        })
-        .catch(err => {
-            console.log('Error getting stats:', err);
-            return message.channel.send(genBasicEmbed(`I couldn't find a PC named ${character}.`));
         });
 }
 

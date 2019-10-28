@@ -52,13 +52,29 @@ const getStatValue = (pc, stat) => {
 };
 
 /**
- * Gets the associated bonus for a desired pc & stat
- * @param {string} pc           The pc to get the value for
- * @param {string} stat         The stat in question
- * @return {Integer} The bonus for the desired stat
+ * Calculates the bonus granted by a given stat value
+ * @param {Integer} score - A stat value
  */
-const getBonus = (pc, stat) => {
-    return Math.floor((getStatValue(pc, stat) - 10) / 2);
+const getBonus = score  => {
+    return Math.floor((score - 10) / 2);
+};
+
+/**
+ * Calculates the bonus for a given skill
+ * @param {Object} skill - The skill in consideration
+ * @param {Number} statValue - The value of the parent stat for the skill
+ * @param {Number} profMod - The proficiency modifier of the character
+ */
+const calcSkillValue = (skill, statValue, profMod) => {
+    let modifier = 0;
+    if (skill.expertise) {
+        modifier = 2 * profMod;
+    } else if(skill.proficient) {
+        modifier = profMod;
+    } else if(skill.jack_of_all_trades) {
+        modifier = 0.5 * profMod;
+    }
+    return getBonus(statValue) + modifier;
 };
 
 /**
@@ -89,4 +105,5 @@ module.exports = {
     getBonus,
     getStatValue,
     getSkillValue,
+    calcSkillValue,
 };
