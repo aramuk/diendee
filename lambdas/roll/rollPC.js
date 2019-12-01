@@ -6,7 +6,7 @@ const { genAuthoredEmbed } = require('../../utils/diendee');
  * @param {Discord.Client} - Diendee Client reference
  * @param {Discord.Message} message - The message where the roll was requested
  */
-const rollPC = (client, message) => {
+module.exports = (client, message) => {
     let embed = genAuthoredEmbed(
         client.user.displayAvatarURL,
         message.author,
@@ -16,4 +16,3 @@ const rollPC = (client, message) => {
     message.channel.send(embed);
 };
 
-module.exports = rollPC;

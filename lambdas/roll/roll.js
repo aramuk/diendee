@@ -8,7 +8,7 @@ const { genBasicEmbed, genAuthoredEmbed } = require('../../utils/diendee');
  * @param {Discord.Message} message - The message where the roll was requested
  * @param {Array} args - Dice to be rolled
  */
-const roll = (client, message, args) => {
+module.exports = (client, message, args) => {
     if (args.length < 1) {
         return message.channel.send('Please provide a valid roll command.');
     }
@@ -49,5 +49,3 @@ const roll = (client, message, args) => {
         message.channel.send(genBasicEmbed(client, "Sorry, I'm not quite sure how to roll that."));
     }
 };
-
-module.exports = roll;

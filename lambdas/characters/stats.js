@@ -7,7 +7,7 @@ const { genStatCard } = require('../../utils/characters');
  * @param {Discord.Message} message - The message which requested the stats
  * @param {Array} args - An array of requested characters
  */
-const stats = (client, message, args) => {
+module.exports = (client, message, args) => {
     // Get user's character by default if none were provided
     const characters = args.length > 0 ? args : [mapping['u' + message.author.id]];
 
@@ -17,5 +17,3 @@ const stats = (client, message, args) => {
         });
     });
 };
-
-module.exports = stats;

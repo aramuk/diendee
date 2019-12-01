@@ -210,50 +210,50 @@ function isPermitted(uid) {
     // return uid != 190515236434870272
 }
 
-async function check(message, args) {
-    if (message.channel.guild === null || message.channel.guild === undefined) {
-        return message.channel.send('I can not do that for you in a direct message channel.');
-    }
-    let server = message.channel.guild.id;
-    if (!guilds.hasOwnProperty(server) || guilds[server].main === undefined) {
-        return message.channel.send(
-            "There doesn't appear to be an active campaign in this server."
-        );
-    }
-    let mapping = guilds[server].main.mapping;
-    let choice = formatArg(args[0]);
-    let playerId = 'u' + message.author.id;
-    if (!mapping.hasOwnProperty(playerId)) {
-        return message.channel.send(
-            `I'm having some trouble finding a PC associated with ${message.author.username}`
-        );
-    } else if (!isSkill(choice) && !isStat(choice)) {
-        return message.channel.send(`I'm not quite sure how to roll ${choice}.`);
-    }
-    let path = `${BASE_PATH}/pcs/${mapping[playerId]}.json`;
-    loadData(path)
-        .then(data => {
-            const roll = rollDie(20);
-            const bonus = isStat(choice) ? getBonus(data, choice) : getSkillValue(data, choice);
-            var result = {
-                cmd: `d20+${bonus}`,
-                total: roll + bonus,
-                result: [roll],
-            };
+// async function check(message, args) {
+//     if (message.channel.guild === null || message.channel.guild === undefined) {
+//         return message.channel.send('I can not do that for you in a direct message channel.');
+//     }
+//     let server = message.channel.guild.id;
+//     if (!guilds.hasOwnProperty(server) || guilds[server].main === undefined) {
+//         return message.channel.send(
+//             "There doesn't appear to be an active campaign in this server."
+//         );
+//     }
+//     let mapping = guilds[server].main.mapping;
+//     let choice = formatArg(args[0]);
+//     let playerId = 'u' + message.author.id;
+//     if (!mapping.hasOwnProperty(playerId)) {
+//         return message.channel.send(
+//             `I'm having some trouble finding a PC associated with ${message.author.username}`
+//         );
+//     } else if (!isSkill(choice) && !isStat(choice)) {
+//         return message.channel.send(`I'm not quite sure how to roll ${choice}.`);
+//     }
+//     let path = `${BASE_PATH}/pcs/${mapping[playerId]}.json`;
+//     loadData(path)
+//         .then(data => {
+//             const roll = rollDie(20);
+//             const bonus = isStat(choice) ? getBonus(data, choice) : getSkillValue(data, choice);
+//             var result = {
+//                 cmd: `d20+${bonus}`,
+//                 total: roll + bonus,
+//                 result: [roll],
+//             };
 
-            let embed = new Discord.RichEmbed()
-                .setThumbnail(client.user.displayAvatarURL)
-                .setAuthor(message.author.username + ' rolled: ', message.author.displayAvatarURL)
-                .setColor('#fcce63')
-                .addField(`**${choice}**:`, formatRolls([result]));
+//             let embed = new Discord.RichEmbed()
+//                 .setThumbnail(client.user.displayAvatarURL)
+//                 .setAuthor(message.author.username + ' rolled: ', message.author.displayAvatarURL)
+//                 .setColor('#fcce63')
+//                 .addField(`**${choice}**:`, formatRolls([result]));
 
-            message.channel.send(embed);
-        })
-        .catch(error => {
-            console.log(`ERROR rolling ${choice}:`, error);
-            return message.channel.send(`I ran into some issues rolling ${choice}.`);
-        });
-}
+//             message.channel.send(embed);
+//         })
+//         .catch(error => {
+//             console.log(`ERROR rolling ${choice}:`, error);
+//             return message.channel.send(`I ran into some issues rolling ${choice}.`);
+//         });
+// }
 
 function get(message, params) {
     //If there was no choice specified

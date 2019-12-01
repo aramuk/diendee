@@ -6,7 +6,7 @@ const auth = require('../../auth.json');
  * @param {Discord.Client} - Diendee Client reference
  * @param {Discord.Message} message - The message that triggered this lambda
  */
-const usage = (client, message) => {
+module.exports = (client, message) => {
     const message_text = 'Here are some ways you can talk to me:';
     //Remove old usage commands
     removePinnedMessages(client, message, message_text);
@@ -49,5 +49,3 @@ const usage = (client, message) => {
     //Pin usage commands to the channel
     message.channel.send(embed).then(message => message.pin());
 };
-
-module.exports = usage;

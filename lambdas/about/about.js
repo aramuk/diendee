@@ -6,7 +6,7 @@ const auth = require('../../auth.json');
  * @param {Discord.Client} - Diendee Client reference
  * @param {Discord.Message} message - The message that triggered this lambda
  */
-const about = (client, message) => {
+module.exports = (client, message) => {
     var owner = client.users.get(auth.owner);
     let embed = genBasicEmbed(
         client,
@@ -18,4 +18,3 @@ const about = (client, message) => {
     message.channel.send(embed);
 };
 
-module.exports = about;
