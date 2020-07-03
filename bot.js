@@ -16,6 +16,13 @@ client.on("ready", function(){
     console.log("I am ready!");
 });
 
+client.on("messageDelete", (message) => {
+	if (message.content == "DONT DELETE THIS") {
+		message.channel.send("DONT DELETE THIS");
+		message.channel.send("https://tenor.com/view/captain-america-ican-do-this-all-day-marvel-gif-14017033");
+	}
+});
+
 //Listen for bot commands
 client.on("message", function(message){
     if (message.author.bot) return;
