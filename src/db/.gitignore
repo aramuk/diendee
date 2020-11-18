@@ -1,0 +1,8 @@
+# Security
+.env
+
+# Database content
+bios/
+icons/
+pcs/
+data/

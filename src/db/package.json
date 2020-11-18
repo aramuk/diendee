@@ -1,0 +1,12 @@
+{
+  "name": "diendee-db",
+  "version": "1.0.0",
+  "description": "Database Management Code for Diendee",
+  "main": "db.js",
+  "author": "±Centurion",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}
