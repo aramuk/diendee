@@ -1,0 +1,16 @@
+# Security
+.env
+auth.json
+
+# Configuration
+diendee.png
+
+#libraries
+package-lock.json
+node_modules
+
+# Database content
+db/bios/
+db/icons/
+db/pcs/
+db/data/

@@ -1,9 +1,0 @@
-# Security
-.env
-auth.json
-
-# Static Assets
-diendee.png
-
-# Generated Files
-package-lock.json
