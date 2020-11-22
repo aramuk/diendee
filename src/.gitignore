@@ -1,11 +1,11 @@
 # Security
 .env
-auth.json
+auth.js
 
-# Configuration
+# Static Content
 diendee.png
 
-#libraries
+# Dependencies
 package-lock.json
 node_modules
 
@@ -14,3 +14,6 @@ db/bios/
 db/icons/
 db/pcs/
 db/data/
+
+# Logs
+*.log

@@ -1,6 +1,8 @@
 const mongoose = require('mongoose');
 
-const initialize = () => {
+const logger = require('../utils/logger');
+
+module.exports = initialize = () => {
   if (process.env.DEPLOYMENT !== 'prod') {
     require('dotenv').config();
   }
@@ -9,12 +11,14 @@ const initialize = () => {
   });
 
   const db = mongoose.connection;
-  db.on('error', console.error.bind(console, '[MongoDB] Connection Error: '));
-  db.once('open', () => {
-    console.log('Successfully connected to MongoDB instance at', process.env.MONGODB_HOST);
-    const 
+
+  db.on('error', error => {
+    logger.error('[DiendeeDB] Connection Error: ', error);
   });
+
+  db.once('open', () => {
+    logger.info('Successfully connected to MongoDB instance at', process.env.MONGODB_HOST);
+  });
+
   return db;
 };
-
-export default initialize;
