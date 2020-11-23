@@ -24,7 +24,7 @@ const about = (client, message) => {
 };
 
 /**
- * Creates a usage embed for this module.
+ * Creates a usage embed for this command.
  * @param {Client} client Discord client reference.
  * @returns {RichEmbed} usage embed.
  */

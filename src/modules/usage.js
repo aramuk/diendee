@@ -2,9 +2,12 @@
  * Definition of Diendee's `usage` command.
  */
 
-const about = require('../modules/about');
 const { genBasicEmbed, removePinnedMessages } = require('../utils/diendee');
-const logger = require('../utils/logger');
+
+// Diendee command modules
+const about = require('../modules/about');
+const roll = require('../modules/roll');
+const rollpc = require('../modules/rollpc');
 
 /**
  * Prints documentation for the commands supported by Diendee.
@@ -25,10 +28,13 @@ const usage = (client, message, args) => {
 
   switch (args[0].toLowerCase()) {
     case 'about':
-      message.channel.send(about.genUsageEmbed(client));
-      break;
+      return message.channel.send(about.genUsageEmbed(client));
+    case 'roll':
+      return message.channel.send(roll.genUsageEmbed(client));
+    case 'rollpc':
+      return message.channel.send(rollpc.genUsageEmbed(client));
     default:
-      message.channel.send(`I didn't quite understand what you meant by ${args[0]}.`);
+      return message.channel.send(`I didn't quite understand what you meant by ${args[0]}.`);
   }
 };
 
