@@ -1,6 +1,6 @@
 const Discord = require('discord.js');
 
-const { TOKEN, PREFIX, OWNER } = require('./auth');
+const { TOKEN } = require('./auth');
 const logger = require('./utils/logger');
 const database = require('./db/client');
 
@@ -17,8 +17,8 @@ const start = () => {
   }
 
   const client = new Discord.Client();
-  client.on('ready', () => onReady(PREFIX));
-  client.on('message', message => onMessage(message, PREFIX, client, diendeeDB));
+  client.on('ready', () => onReady());
+  client.on('message', message => onMessage(client, message, diendeeDB));
   client.on('error', error => logger.error(`Discord Client Error: ${error}`));
   client.login(TOKEN);
 };

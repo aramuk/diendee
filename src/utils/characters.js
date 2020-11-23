@@ -5,7 +5,7 @@ const { calcSkillValue } = require('./dndtools');
 /**
  * Creates a bio card for the passed character
  * @param {Discord.Client} client - Diendee Client reference
- * @param {String} character - The name of the character to load
+ * @param {string} character - The name of the character to load
  */
 const genBioCard = (client, character) => {
     return loadData(BASE_PATH + '/pcs/' + character + '.json')
@@ -61,7 +61,7 @@ const genBioCard = (client, character) => {
 /**
  * Creates a stat card for the passed character
  * @param {Discord.Client} client - Diendee client reference
- * @param {String} character - The character to get data for
+ * @param {string} character - The character to get data for
  */
 const genStatCard = (client, character) => {
     //Load character data
