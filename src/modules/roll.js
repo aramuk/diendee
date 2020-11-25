@@ -2,10 +2,9 @@
  * Definition of Diendee's `roll` command.
  */
 
-const { parseNat } = require('../utils/auxlib');
 const { genAuthoredEmbed, genBasicEmbed } = require('../utils/diendee');
 const logger = require('../utils/logger');
-const { formatRolls, rollDice, parseRoll } = require('../utils/roller');
+const { formatRolls, rollDice, rollRegex, parseRoll, parseRollExpr } = require('../utils/roller');
 
 /**
  * Rolls the requested dice.
@@ -24,42 +23,15 @@ const roll = (client, message, args) => {
     `${message.author.username} rolled: `
   );
 
-  const throws = [];
-  for (const roll of args) {
-    let start = -1;
-    let total = 0;
-    let errorFlag = false;
-    const rolls = [];
-    for (var i = 0; i <= roll.length; i++) {
-      if (roll[i] === '+' || roll[i] === '-' || i === roll.length) {
-        const sign = start === -1 || roll[start] === '+' ? 1 : -1;
-        const cmd = roll.substring(start+1, i);
-        logger.info(`roll = ${roll}, roll[${start}:${i}] = ${cmd}, sign = ${roll[start]}(${sign})`);
-        let match = parseRoll(cmd);
-        if (match) {
-          const result = rollDice(parseNat(match[1]), match[2]);
-          total += sign * result.total;
-          rolls.push(result);
-        } else if (!isNaN(cmd)) {
-          const num = parseInt(cmd);
-          rolls.push({ cmd, result: [num], total: num });
-          total += sign * num;
-        } else {
-          message.channel.send(`I'm not quite sure how to roll ${cmd}`);
-          errorFlag = true;
-          break;
-        }
-        start = i;
-      }
+  for (const item of args) {
+    if (!rollRegex.exec(item)) {
+      message.channel.send(`I don't quite understand what you meant by ${item}.`);
+      continue;
     }
-    if (!errorFlag) {
-      throws.push([roll, formatRolls(rolls) + `\n**Total**: ${total}`]);
-    }
+    const { grandTotal, rolls } = parseRollExpr(item);
+    embed.addField(`**${item}**`, formatRolls(rolls) + `\n**Total**: ${grandTotal}`, true);
   }
 
-  for (const [roll, result] of throws) {
-    embed.addField(`**${roll}**`, result, true);
-  }
   return message.channel.send(embed);
 };
 
@@ -73,8 +45,8 @@ roll.genUsageEmbed = client => {
     client,
     'The `roll` command:',
     'Description: Rolls stats for a new character.\n\n' +
-      'Syntax: `$roll [items ...]`\n\n' +
-      'An item is formatted as [M]d[N] or digits, combined by + and -.\n' + 
+      'Syntax: `$roll items ...`\n\n' +
+      'An item is formatted as [M]d[N] or digits, combined by + and -.\n' +
       'Multiple items can be rolled at once\n\n' +
       'Example: `$roll 2d6+1d8+5 1d20-4 d20`'
   );
