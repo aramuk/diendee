@@ -9,10 +9,10 @@ const { parseCommand } = require('../utils/parser');
 const about = require('../modules/about');
 const usage = require('../modules/usage');
 const roll = require('../modules/roll');
-const rollPC = require('../modules/rollpc');
+const rollpc = require('../modules/rollpc');
 
 module.exports = (client, message, db) => {
-  if (message.isMemberMentioned(client.user)) {
+  if (!message.mentions.everyone && message.mentions.has(client.user)) {
     switch (Math.floor(Math.random() * 5 + 1)) {
       case 1:
         return message.channel.send('Please await my return, friend.');
@@ -43,7 +43,7 @@ module.exports = (client, message, db) => {
     case '$roll':
       return roll(client, message, args);
     case '$rollpc':
-      return rollPC(client, message);
+      return rollpc(client, message);
     default:
       return message.channel.send(`I am afraid I didn't understand your request.`);
   }

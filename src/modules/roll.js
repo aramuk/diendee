@@ -4,7 +4,7 @@
 
 const { genAuthoredEmbed, genBasicEmbed } = require('../utils/diendee');
 const logger = require('../utils/logger');
-const { formatRolls, rollDice, rollRegex, parseRoll, parseRollExpr } = require('../utils/roller');
+const { formatRolls, rollRegex, parseRollExpr } = require('../utils/roller');
 
 /**
  * Rolls the requested dice.
@@ -18,27 +18,29 @@ const roll = (client, message, args) => {
   }
 
   let embed = genAuthoredEmbed(
-    client.user.displayAvatarURL,
+    client.user.avatarURL(),
     message.author,
     `${message.author.username} rolled: `
   );
 
   for (const item of args) {
     if (!rollRegex.exec(item)) {
-      message.channel.send(`I don't quite understand what you meant by ${item}.`);
+      message.channel.send(`I'm not quite sure how to roll ${item}.`);
       continue;
     }
     const { grandTotal, rolls } = parseRollExpr(item);
     embed.addField(`**${item}**`, formatRolls(rolls) + `\n**Total**: ${grandTotal}`, true);
   }
 
-  return message.channel.send(embed);
+  if (embed.fields.length > 0) {
+    return message.channel.send(embed);
+  }
 };
 
 /**
  * Creates a usage embed for this command.
  * @param {Client} client Discord client reference.
- * @return {RichEmbed} usage embed;
+ * @return {MessageEmbed} usage embed;
  */
 roll.genUsageEmbed = client => {
   return genBasicEmbed(

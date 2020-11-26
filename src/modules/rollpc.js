@@ -12,7 +12,7 @@ const { formatRolls, rollCharacter } = require('../utils/roller');
  */
 const rollpc = (client, message) => {
   let embed = genAuthoredEmbed(
-    client.user.displayAvatarURL,
+    client.user.avatarURL(),
     message.author,
     `${message.author.username} rolled: `
   ).addField('**New Character**:', formatRolls(rollCharacter()));
@@ -23,7 +23,7 @@ const rollpc = (client, message) => {
 /**
  * Creates a usage embed for this command.
  * @param {Client} client Discord client reference.
- * @return {RichEmbed} usage embed;
+ * @return {MessageEmbed} usage embed;
  */
 rollpc.genUsageEmbed = client => {
   return genBasicEmbed(

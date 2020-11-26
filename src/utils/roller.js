@@ -9,7 +9,7 @@ const { loadData, capitalize, parseNat } = require('./auxlib');
  *  - 1d20-2d4+3
  *  - 25+4d6-1d6
  * */
-const rollRegex = /^(?:(?:\d*d\d+?)|(?:\d+))(?:[+-](?:(?:\d*d\d+?)|(?:\d+)))*$/;
+const rollRegex = /^(?:(?:\d*d\d+?)|(?:[+-]?\d+))(?:[+-](?:(?:\d*d\d+?)|(?:\d+)))*$/;
 
 /**
  * Given a specific dice command or constant, parses and
@@ -20,7 +20,7 @@ const rollRegex = /^(?:(?:\d*d\d+?)|(?:\d+))(?:[+-](?:(?:\d*d\d+?)|(?:\d+)))*$/;
 const parseRoll = roll => {
   const dIdx = roll.indexOf('d');
   if (dIdx < 0) {
-    const num = parseNat(roll);
+    const num = parseInt(roll);
     return {
       total: num,
       result: [num],

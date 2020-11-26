@@ -41,7 +41,7 @@ const usage = (client, message, args) => {
 /**
  * Returns an embed with usage summaries for all modules.
  * @param {string} title Title for the usage embed.
- * @return {RichEmbed}
+ * @return {MessageEmbed}
  */
 usage.genUsageEmbed = (client, title) => {
   let embed = genBasicEmbed(
@@ -52,7 +52,7 @@ usage.genUsageEmbed = (client, title) => {
     .addField('`about`:', 'About me!')
     .addField('`usage`:', 'How to talk to me!')
     .addField('`roll`:', 'Rolling some dice')
-    .addField('`rollPC`:', 'Roll a new character.');
+    .addField('`rollpc`:', 'Roll a new character.');
 
   return embed;
 };

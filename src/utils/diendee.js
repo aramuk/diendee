@@ -12,8 +12,8 @@ const logger = require('./logger');
  * @param {string} text Optional description for the embed.
  */
 const genBasicEmbed = (client, title, text = '') => {
-  let embed = new Discord.RichEmbed()
-    .setThumbnail(client.user.displayAvatarURL)
+  let embed = new Discord.MessageEmbed()
+    .setThumbnail(client.user.avatarURL())
     .setColor('#fcce63')
     .setTitle(`**${title}**`);
 
@@ -30,9 +30,9 @@ const genBasicEmbed = (client, title, text = '') => {
  * @param {string} title
  */
 const genAuthoredEmbed = (thumbnail, author, title) => {
-  return new Discord.RichEmbed()
+  return new Discord.MessageEmbed()
     .setThumbnail(thumbnail)
-    .setAuthor(title, author.displayAvatarURL)
+    .setAuthor(title, author.avatarURL())
     .setColor('#fcce63');
 };
 
@@ -44,7 +44,7 @@ const genAuthoredEmbed = (thumbnail, author, title) => {
  * @param {string} color
  */
 const genCharacterEmbed = (thumbnail, title, desc, color) => {
-  return new Discord.RichEmbed()
+  return new Discord.MessageEmbed()
     .setThumbnail(thumbnail)
     .setTitle(title)
     .setDescription(desc)
@@ -59,7 +59,7 @@ const genCharacterEmbed = (thumbnail, title, desc, color) => {
  */
 const removePinnedMessages = (client, message, title) => {
   const boldedTitle = `**${title}**`;
-  message.channel.fetchPinnedMessages().then(messages => {
+  message.channel.messages.fetchPinned().then(messages => {
     messages = messages.array();
     messages.forEach(mes => {
       if (
