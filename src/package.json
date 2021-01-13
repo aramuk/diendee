@@ -9,7 +9,7 @@
         "dotenv": "^8.2.0",
         "fs": "0.0.1-security",
         "fs-extra": "^7.0.1",
-        "mongoose": "^5.10.15",
+        "mongoose": "^5.11.11",
         "uuid": "^3.4.0",
         "winston": "^3.3.3"
     },

@@ -1,32 +1,71 @@
 const mongoose = require('mongoose');
 
+const auth = require('../auth');
 const logger = require('../utils/logger');
 
-const initialize = () => {
-  if (process.env.DEPLOYMENT !== 'prod') {
-    require('dotenv').config();
+const campaignSchema = require('./models/campaignSchema');
+const itemSchema = require('./models/itemSchema');
+const pcSchema = require('./models/pcSchema');
+const skillSchema = require('./models/skillSchema');
+const statSchema = require('./models/statSchema');
+
+class DiendeeDB {
+  constructor(options = {}) {
+    if (process.env.DEPLOYMENT !== 'PRD') {
+      require('dotenv').config();
+    }
+    this.config = {
+      url: `mongodb+srv://${process.env.MONGODB_USER}:${process.env.MONGODB_PASSWORD}@${process.env.MONGODB_HOST}/`,
+      options: {
+        dbName: process.env.MONGODB_DBNAME,
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+        useCreateIndex: true,
+        ...options,
+      },
+    };
+    this.connection = null;
+    this.models = {
+      Campaign: null,
+      PC: null,
+      Skill: null,
+      Stat: null,
+      Item: null,
+    };
   }
-  mongoose.connect(process.env.MONGODB_HOST, {
-    dbName: process.env.MONGODB_NAME,
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
+
+  async start() {
+    try {
+      await mongoose.connect(this.config.url, this.config.options);
+      this.connection = mongoose.connection;
+      logger.info(
+        `Successfully connected to MongoDB instance at ${process.env.MONGODB_HOST}/${process.env.MONGODB_DBNAME}`
+      );
+
+      this.models = {
+        Campaign: this.connection.model('Campaign', campaignSchema),
+        PC: this.connection.model('PC', pcSchema),
+        Skill: this.connection.model('Skill', skillSchema),
+        Stat: this.connection.model('Stat', statSchema),
+        Item: this.connection.model('Item', itemSchema),
+      };
+    } catch (error) {
+      logger.error('[DiendeeDB] Connection Error: ', error);
+      if (this.connection) {
+        this.connection.close();
+      }
+      this.connection = null;
+    }
+  }
+}
+
+if (typeof require !== undefined && require.main === module) {
+  let db = new DiendeeDB();
+  db.start().then(() => {
+    db.models.Campaign.find({}, (err, docs) => {
+      console.log(`Found ${docs.length} Campaigns`);
+    });
   });
+}
 
-  const db = mongoose.connection;
-
-  db.on('error', error => {
-    logger.error('[DiendeeDB] Connection Error: ', error);
-  });
-
-  db.once('open', () => {
-    logger.info(
-      `Successfully connected to MongoDB instance at ${process.env.MONGODB_HOST}/${process.env.MONGODB_NAME}`
-    );
-  });
-
-  return db;
-};
-
-module.exports = {
-  initialize,
-};
+module.exports = DiendeeDB;

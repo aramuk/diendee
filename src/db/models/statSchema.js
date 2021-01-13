@@ -1,13 +1,26 @@
 const mongoose = require('mongoose');
 
-const skillSchema = require('./skill.js');
+const skillSchema = require('./skillSchema');
 
 const statSchema = new mongoose.Schema({
-    saves: Boolean,
-    skill: {
-        type: Map,
-        of: skillSchema,
-    },
+  score: {
+    type: Number,
+    required: true,
+    min: 1,
+    validate: value => Number.isInteger(value),
+  },
+  saves: {
+    type: Boolean,
+    default: false,
+  },
+  skills: {
+    type: Map,
+    of: skillSchema,
+  },
 });
 
-module.exports = statSchema;
+statSchema.virtual('modifier').get(() => {
+  return Math.floor((this.score - 10) / 2);
+});
+
+module.exports = statSchema
