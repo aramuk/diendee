@@ -12,5 +12,8 @@
         "mongoose": "^5.10.15",
         "uuid": "^3.4.0",
         "winston": "^3.3.3"
+    },
+    "engines": {
+        "node": "14.x"
     }
 }
