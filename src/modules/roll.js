@@ -47,10 +47,14 @@ roll.genUsageEmbed = client => {
     client,
     'The `roll` command:',
     'Description: Rolls stats for a new character.\n\n' +
-      'Syntax: `$roll items ...`\n\n' +
-      'An item is formatted as [M]d[N] or digits, combined by + and -.\n' +
-      'Multiple items can be rolled at once\n\n' +
-      'Example: `$roll 2d6+1d8+5 1d20-4 d20`'
+      'Syntax: `$roll item ...`\n\n' +
+      'An item is formatted as [N]d[S] or digits, combined by + and -.\n' +
+      'If not specified, the number of dice N, will be assumed to be 1.\n\n' +
+      'Optionally, only the highest or lowest [D] rolls can be kept, ' +
+      'using the notation [N]d[S]kh[D] to keep the D highest, or ' +
+      '[N]d[S]kl[D] to keep the D lowest rolls.\n\n' + 
+      'Multiple items can be rolled at once.\n\n' +
+      'Example: `$roll 4d6 2d10+1d8+5 1d20-4 d20 8d8kh6+3d4kl2`'
   );
 };
 
