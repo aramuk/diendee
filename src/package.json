@@ -5,7 +5,7 @@
     "main": "bot.js",
     "author": "±Centurion",
     "dependencies": {
-        "discord.js": "^12.5.1",
+        "discord.js": "^12.5.3",
         "dotenv": "^8.2.0",
         "fs": "0.0.1-security",
         "fs-extra": "^7.0.1",
